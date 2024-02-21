@@ -1,0 +1,34 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center; /* Zarovnání obsahu na střed */
+}
+
+form {
+    width: 300px;
+    margin: 0 auto; /* Zarovnání formuláře na střed */
+    text-align: left; /* Nová změna: Zarovnání textu v polích doleva */
+}
+
+label {
+    display: inline-block; /* Umožní zarovnat text vedle pole */
+    text-align: right; /* Nová změna: Zarovnání textu ve štítku doprava */
+    width: 120px; /* Šířka štítku */
+}
+
+input {
+    width: 150px; /* Šířka pole pro zadání údajů */
+}
+
+input[type="submit"] {
+    margin-top: 10px; /* Odstup tlačítka od ostatních prvků */
+}
+
+.title-center {
+    text-align: center;
+}
+
+@media print {
+    .no-print {
+        display: none;
+    }
+}

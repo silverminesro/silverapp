@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoznam prevádzok</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e2e2e2;
+        }
+        #filterInput {
+            width: 200px; /* Menší filter */
+            padding: 10px;
+            margin-bottom: 10px;
+            display: block;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Zoznam prevádzok</h1>
+
+    <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Filtrovať podľa názvu..." style="display: block; margin: 20px auto;">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Názov</th>
+                <th>Adresa</th>
+                <th>IČO</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for business in businesses %}
+            <tr>
+                <td>{{ business[1] }}</td>
+                <td>{{ business[2] }}</td>
+                <td>{{ business[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        function filterTable() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("filterInput");
+            filter = input.value.toUpperCase();
+            table = document.querySelector("table");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0]; // Index 0 is for the first column (Name)
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

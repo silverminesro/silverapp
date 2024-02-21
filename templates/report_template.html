@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .center {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .medium {
+            font-size: 16px;
+        }
+        .bordered {
+            border: 1px solid #ddd;
+            padding: 8px;
+            margin-bottom: 20px;
+        }
+        .float-left {
+            float: left;
+        }
+        .float-right {
+            float: right;
+        }
+        .centered {
+            text-align: center;
+        }
+        .half-width {
+            width: 50%;
+            float: left;
+        }
+        .right-align {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="center">Obchodný doklad / Zberný list pre vedľajšie živočíšne produkty</h2>
+        <table>
+            <tbody>
+                <tr>
+                    <td><strong>ID:</strong> {{ archive_records[0] }}</td>
+                    <td><strong>Dátum:</strong> {{ archive_records[1] }}</td>
+                    <td><strong>Číslo dokladu:</strong> {{ archive_records[2] }}</td>
+                </tr>
+                <!-- Tu budú údaje z databázy -->
+                <tr>
+                    <td colspan="3">
+                        <div class="bordered">
+                            <p class="medium"><strong>Prepravovaný materiál:</strong> Vedľajšie živočíšne produkty - materiál kat. 3 (neurčený pre ľudskú spotrebu)</p> <!-- <p class="medium"><strong>Prepravovaný materiál:</strong> {{ archive_records[6] }}</p> -->
+                            <p class="medium"><strong>Názov odpadu:</strong> {{ archive_records[7] }}</p>
+                            <p class="medium"><strong>Množstvo:</strong> {{ archive_records[10] }} Kg</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+            <tbody>
+                <tr>
+                    <td colspan="3">
+                        <div class="bordered">
+                            <p class="medium"><strong>Odovzdávajúci: </strong> {{ archive_records[3] }}, </p>
+                            <p class="medium"><strong>Prepravca: </strong> {{ archive_records[4] }}</p>
+                            <p class="medium"><strong>Preberajúci: </strong> {{ archive_records[5] }}</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+            <tbody>
+                <tr>
+                    <td colspan="3">
+                        <div class="bordered">
+                            <p class="medium"><strong>Meno a priezvisko prepravcu: </strong> {{ archive_records[8] }}</p>
+                            <p class="medium"><strong>EČV: </strong> {{ archive_records[9] }}</p>
+                            {% if "Silver Mine, s.r.o" in archive_records[4] %}
+                                <p class="medium"><strong>Registračné číslo ŠVPS: </strong> COLTR33PU-SK</p>
+                            {% elif "Silver Mine PLUS, s.r.o." in archive_records[4] %}
+                                <p class="medium"><strong>Registračné číslo ŠVPS: </strong> COLTR152PU-SK</p>
+                            {% endif %}
+                        </div>
+                    </td>
+                    
+                </tr>
+            </tbody>
+            <tbody>
+                <tr>
+                    <td colspan="3">
+                        <div class="half-width">
+                            <p class="medium float-left">Prevzal: {{ records }}</p>
+                            <p class="medium centered">Odovzdal: {{ records }}</p>
+                            {% if 'Silver Mine PLUS' in archive_records[4] %}
+                                <img src="{{ url_for('static', filename='images/plus.png') }}" alt="Obrázok">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/silver.png') }}" alt="Obrázok">
+                            {% endif %}
+                        </div>
+                        {% if archive_records[11] != '0' %}
+                            <div class="half-width right-align">
+                                <p class="medium"><strong>Počet nádob: </strong> {{ archive_records[11] }}</p>
+                            </div>
+                        {% endif %}
+                    </td>
+                                      
+                </tr>
+            </tbody>
+        </table>
+        
+<!-- Tlačidlo na vytlačenie záznamu -->
+<button class="no-print" onclick="printPage()">Vytlačiť záznam</button>
+
+<script>
+    function printPage() {
+        window.print(); // Funkcia na vytlačenie obsahu stránky
+    }
+</script>

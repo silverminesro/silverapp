@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add to Archive</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form p {
+            margin-bottom: 15px;
+        }
+        select, input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button[type="submit"], button[type="button"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        button[type="submit"]:hover, button[type="button"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nový zberný list</h1>
+        <form method="POST" id="archiveForm">
+            {{ form.hidden_tag() }}
+            <p>{{ form.date.label }}<br>{{ form.date }}</p>
+            <p>{{ form.document_number.label }}<br>{{ form.document_number }}</p>
+            <p>{{ form.delivering.label }}<br>
+                <select name="delivering">
+                    {% for option in form.delivering.choices %}
+                    <option value="{{ option }}">{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p>{{ form.carrier.label }}<br>
+                <select name="carrier">
+                    <option value="Silver Mine, s.r.o, Kvašov 43, 020 62 Kvašov, IČO: 47 204 788">Silver Mine, s.r.o, Kvašov 43, 020 62 Kvašov, IČO: 47 204 788</option>
+                    <option value="Silver Mine PLUS, s.r.o., Kvašov 43, 020 62 Kvašov, IČO: 55598439">Silver Mine PLUS, s.r.o., Kvašov 43, 020 62 Kvašov, IČO: 55598439</option>
+                </select>
+            </p>
+            <p>{{ form.receiver.label }}<br>
+                <select name="receiver">
+                    <option value="INTA, s.r.o. Rybárska 758/18 911 01 Trenčín, TRANZ 21TN-SK">INTA, s.r.o. Rybárska 758/18 911 01 Trenčín, TRANZ 21TN-SK</option>
+                    <option value="BIOPLYN BIEROVCE s. r. o. Centrum II 70/1 018 41 Dubnica nad Váhom">BIOPLYN BIEROVCE s. r. o. Centrum II 70/1 018 41 Dubnica nad Váhom</option>
+                    <option value="CMT Group s. r. o. Panenská 13 811 03 Bratislava-Staré Mesto, TRAN51BASK">CMT Group s. r. o. Panenská 13 811 03 Bratislava-Staré Mesto, TRAN51BASK</option>
+                    <option value="Bioplyn Horovce, s. r. o. Horovce 106 020 62 Horovce">Bioplyn Horovce, s. r. o. Horovce 106 020 62 Horovce</option>
+                    <option value="Silver Mine, s.r.o, Kvašov 43, 020 62 Kvašov, IČO: 47 204 788, Sklad Kvašov 252, STO-PU87-SK">Silver Mine, s.r.o, Kvašov 43, 020 62 Kvašov, IČO: 47 204 788, Sklad Kvašov 252, STO-PU87-SK</option>
+                </select>
+            </p>
+            <p>{{ form.material.label }}<br>
+                <select name="material">
+                    <option value="Odpad">Odpad</option>
+                </select>
+            </p>
+            <p>{{ form.waste_name.label }}<br>
+                <select name="waste_name">
+                    <option value="20 01 08 biologicky rozložiteľný kuchynský a reštauračný odpad">20 01 08 biologicky rozložiteľný kuchynský a reštauračný odpad</option>
+                    <option value="20 01 25 jedlé oleje a tuky">20 01 25 jedlé oleje a tuky</option>
+                    <option value="19 08 09 zmesi tukov a olejov z odlučovačov oleja z vody obsahujúce jedlé oleje a tuky">19 08 09 zmesi tukov a olejov z odlučovačov oleja z vody obsahujúce jedlé oleje a tuky</option>
+                </select>
+            </p>
+            <p>{{ form.carrier_name.label }}<br>
+                <select name="carrier_name">
+                    <option value="Boris Ondráško">Boris Ondráško</option>
+                </select>
+            </p>
+            <p>{{ form.ecv.label }}<br>
+                <select name="ecv">
+                    <option value="PU521BX">PU521BX</option>
+                </select>
+            </p>
+            <p>{{ form.quantity.label }}<br>{{ form.quantity }}</p> <!-- Nové pole pre množstvo v KG -->
+            <p>{{ form.poznamka.label }}<br>{{ form.poznamka }}</p> <!-- Pole pre poznámku -->
+            <p><button type="submit"><i class="fas fa-save"></i> Uložiť</button></p>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("archiveForm").addEventListener("submit", function(event){
+            alert("Údaje boli úspešne uložené do databázy");
+        });
+    </script>
+</body>
+</html>
+

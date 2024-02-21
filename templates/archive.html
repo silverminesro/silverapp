@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archív zberných listov</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        p {
+            text-align: center;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer; /* Kurzor sa zmení na ruku pri prekliknutí */
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .logout-btn {
+            float: right;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-block;
+            margin-right: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* tieňovanie */
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .filter-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .filter-input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 50%;
+            margin-right: 10px;
+        }
+        .filter-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .filter-btn:hover {
+            background-color: #0056b3;
+        }
+        .action-btns {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .action-btns button {
+            margin-left: 10px;
+            padding: 10px 20px; /* pridana velkost */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* tieňovanie */
+        }
+        .report-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-block;
+        }
+        .report-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zberné listy na tlač</h1>
+
+        <!-- Tlačidlo na návrat na admin.html -->
+        <div class="action-btns">
+            <form action="/admin" method="get">
+                <button class="btn"><i class="fas fa-arrow-left"></i> Späť na admin</button>
+            </form>
+
+            <!-- Tlačidlo na obnovenie údajov -->
+            <form action="/refresh_data" method="get">
+                <button class="btn" style="padding: 10px 20px;"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </form>
+        </div>
+
+        <!-- Filter -->
+        <div class="filter-container">
+            <input type="text" id="filterInput" class="filter-input" onkeyup="filterTable()" placeholder="Filtrovať podľa ID...">
+            <button class="filter-btn" onclick="filterTable()">Filtrovať</button>
+        </div>
+
+        <table id="archiveTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">ID &#8597;</th>
+                    <th onclick="sortTable(1)">Dátum &#8597;</th>
+                    <th onclick="sortTable(2)">Názov prevádzky &#8597;</th>
+                    <th onclick="sortTable(3)">Názov odpadu &#8597;</th>
+                    <th onclick="sortTable(4)">Množstvo KG &#8597;</th>
+                    <th>Report</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in archive_records|reverse %}
+                    <tr>
+                        <td>{{ record[0] }}</td>
+                        <td>{{ record[1] }}</td>
+                        <td>{{ record[2] }}</td>
+                        <td>{{ record[3] }}</td>
+                        <td>{{ record[4] }}</td>
+                        <td><a href="/report_template/{{ record[0] }}" target="_blank"><button class="report-btn"><i class="fas fa-chart-bar"></i></button></a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function generateReport(date, delivering, waste_name, quantity) {
+            // Vytvoriť URL pre generovanie reportu s parametrami
+            var url = '/report_template?date=' + encodeURIComponent(date) + '&delivering=' + encodeURIComponent(delivering) + '&waste_name=' + encodeURIComponent(waste_name) + '&quantity=' + encodeURIComponent(quantity);
+            // Vyvolať AJAX požiadavku na server
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    // Otvoriť nové okno a vložiť do neho vygenerovaný report
+                    var newWindow = window.open();
+                    newWindow.document.write(html);
+                })
+                .catch(error => {
+                    console.error('Chyba pri generovaní reportu:', error);
+                });
+        }
+
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById("archiveTable");
+            switching = true;
+            //Set the sorting direction to ascending:
+            dir = "asc";
+            /*Make a loop that will continue until
+            no switching has been done:*/
+            while (switching) {
+                //start by saying: no switching is done:
+                switching = false;
+                rows = table.rows;
+                /*Loop through all table rows (except the
+                first, which contains table headers):*/
+                for (i = 1; i < (rows.length - 1); i++) {
+                    //start by saying there should be no switching:
+                    shouldSwitch = false;
+                    /*Get the two elements you want to compare,
+                    one from current row and one from the next:*/
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    /*check if the two rows should switch place,
+                    based on the direction, asc or desc:*/
+                    if (dir == "asc") {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            //if so, mark as a switch and break the loop:
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            //if so, mark as a switch and break the loop:
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    /*If a switch has been marked, make the switch
+                    and mark that a switch has been done:*/
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    //Each time a switch is done, increase this count by 1:
+                    switchcount ++;
+                } else {
+                    /*If no switching has been done AND the direction is "asc",
+                    set the direction to "desc" and run the while loop again.*/
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+
+        function filterTable() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("filterInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("archiveTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0]; // Index 0 is for the first column (Date)
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+    
+</body>
+</html>

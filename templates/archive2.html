@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archív zberných listov</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .record {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* tieňovanie */
+        }
+        .filter-input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Filter vývozov</h1>
+        
+        <!-- Tlačidlo na návrat na admin.html -->
+        <form action="/admin" method="get">
+            <button class="btn"><i class="fas fa-arrow-left"></i> Späť na admin</button>
+        </form>
+
+        <!-- Filter -->
+        <input type="text" id="filterInput" class="filter-input" onkeyup="filterRecords()" placeholder="Filtrovať záznamy...">
+
+        <!-- Zoznam záznamov -->
+        {% for record in archive_records|reverse %}
+        <div class="record">
+            <p><strong>ID:</strong> {{ record[0] }}</p>
+            <p><strong>Dátum:</strong> {{ record[1] }}</p>
+            <p><strong>Číslo dokladu:</strong> {{ record[2] }}</p>
+            <p><strong>Odovzdávajúci:</strong> {{ record[3] }}</p>
+            <p><strong>Prepravca:</strong> {{ record[4] }}</p>
+            <p><strong>Preberajúci:</strong> {{ record[5] }}</p>
+            <p><strong>Materiál:</strong> {{ record[6] }}</p>
+            <p><strong>Názov odpadu:</strong> {{ record[7] }}</p>
+            <p><strong>Meno prepravcu:</strong> {{ record[8] }}</p>
+            <p><strong>ECV:</strong> {{ record[9] }}</p>
+            <p><strong>Množstvo v KG:</strong> {{ record[10] }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function filterRecords() {
+            var input, filter, records, record, i, txtValue;
+            input = document.getElementById("filterInput");
+            filter = input.value.toUpperCase();
+            records = document.getElementsByClassName("record");
+            for (i = 0; i < records.length; i++) {
+                record = records[i];
+                txtValue = record.textContent || record.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    record.style.display = "";
+                } else {
+                    record.style.display = "none";
+                }
+            }
+        }
+    </script>
+</body>
+</html>

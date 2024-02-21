@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            margin-top: 20px;
+            color: #333;
+            text-align: center;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"], input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: #0056b3;
+        }
+        .logout-form {
+            text-align: right;
+        }
+        .confirm-message {
+            display: none;
+            text-align: center;
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .confirm-message button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .confirm-message button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-cogs"></i> Admin Panel</h1>
+
+        <div class="confirm-message" id="confirm-message">
+            Chcete vytvořit novou prevádzku?
+            <button id="confirm-yes">Ano</button>
+            <button id="confirm-no">Nie</button>
+        </div>
+
+        <h2><a href="/add_to_archive"><i class="fas fa-plus"></i> Vytvoriť nový zberný list</a></h2>
+        <h2><a href="/list_of_businesses"><i class="fas fa-building"></i> Zoznam prevádzok</a></h2>
+        <h2><a href="/archive"><i class="fas fa-archive"></i> Zberné listy na tlač</a></h2>
+        <h2><a href="/archive2"><i class="fas fa-archive"></i> Filter vývozov</a></h2>
+        <h2><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Zaregistrovať novú prevádzku</a></h2>
+        <h2><a href="/statistika"><i class="fas fa-chart-bar"></i> Štatistika</a></h2>
+
+        <form id="create-form" action="/create_business" method="post">
+            <h2><i class="fas fa-plus"></i> Vytvoriť novú prevádzku</h2>
+            <label for="name">Název prevádzky:</label><br>
+            <input type="text" id="name" name="name"><br>
+            <label for="address">Adresa prevádzky:</label><br>
+            <input type="text" id="address" name="address"><br>
+            <label for="ico">IČO:</label><br>
+            <input type="text" id="ico" name="ico"><br><br>
+            <input type="submit" value="Vytvoriť">
+        </form>
+        
+        <form class="logout-form" action="/logout" method="get">
+            <input type="submit" value="Odhlásiť sa">
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('create-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            document.getElementById('confirm-message').style.display = 'block';
+        });
+
+        document.getElementById('confirm-yes').addEventListener('click', function() {
+            document.getElementById('create-form').submit();
+        });
+
+        document.getElementById('confirm-no').addEventListener('click', function() {
+            document.getElementById('confirm-message').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Data</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Funkcia na načítanie údajov z databázy
+            function loadData() {
+                $.ajax({
+                    url: "/api/data",
+                    type: "GET",
+                    success: function(response) {
+                        // Aktualizácia obsahu stránky s použitím získaných údajov
+                        updatePageContent(response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                        alert("Chyba pri načítaní údajov z databázy.");
+                    }
+                });
+            }
+
+            // Funkcia na aktualizáciu obsahu stránky
+            function updatePageContent(data) {
+                // Tu môžete aktualizovať obsah stránky podľa získaných údajov
+                console.log(data); // Môžete zobraziť údaje v konzole pre overenie
+            }
+
+            // Pripojenie udalosti kliknutia na tlačidlo
+            $("#loadDataBtn").click(function() {
+                loadData();
+            });
+        });
+    </script>
+</head>
+<body>
+    <button id="loadDataBtn">Načítať údaje z databázy</button>
+</body>
+</html>
