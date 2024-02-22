@@ -406,42 +406,40 @@ def download_databases():
     # Odoslanie zip archívu ako súboru na sťahovanie
     return send_file(zip_path, as_attachment=True)
 
-
-# Získání cesty k adresáři, ve kterém se nachází tento skript
+###
+# Získanie cesty k adresáru, v ktorom sa nachádza tento skript
 script_directory = os.path.dirname(__file__)
 
-# Cesta k adresáři s databázemi
+# Cesta k adresáru s databázami
 database_dir = script_directory
 
-# Seznam názvů databází
+# Zoznam názvov databáz
 database_names = ['users.db', 'businesses.db', 'archiv.db']
 
-# Funkce pro zálohování všech databází
+# Funkcia na zálohovanie všetkých databáz
 def backup_databases():
     for db_name in database_names:
         db_path = os.path.join(database_dir, db_name)
         if os.path.exists(db_path):
-            # Kopírování existující databáze do souboru s jiným názvem
-            shutil.copyfile(db_path, db_path + '_backup')
+            backup_path = db_path + '_backup'
+            shutil.copyfile(db_path, backup_path)
 
-# Funkce pro obnovení databází
+# Funkcia na obnovenie databáz zálohy
 def restore_databases():
     for db_name in database_names:
-        backup_db_path = os.path.join(database_dir, db_name + '_backup')
-        if os.path.exists(backup_db_path):
-            # Obnovení databáze ze zálohy
-            shutil.copyfile(backup_db_path, os.path.join(database_dir, db_name))
-            # Odstranění zálohy
-            os.remove(backup_db_path)
+        backup_path = os.path.join(database_dir, db_name + '_backup')
+        db_path = os.path.join(database_dir, db_name)
+        if os.path.exists(backup_path):
+            shutil.copyfile(backup_path, db_path)
 
-# Zálohování databází před vypnutím serveru
+# Zálohovanie databáz pred presunutím serveru do spiaceho režimu
 @atexit.register
-def backup_on_exit():
+def backup_before_sleep():
     backup_databases()
 
-# Obnovení databází při spuštění serveru
-@app.before_first_request
-def restore_on_startup():
+# Obnovenie databáz po spustení serveru z spiaceho režimu
+@app.before_request
+def restore_after_wake_up():
     restore_databases()
 
 if __name__ == "__main__":
