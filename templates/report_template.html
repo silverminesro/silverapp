@@ -108,9 +108,9 @@
                         <div class="half-width">
                             <p class="medium float-left">Prevzal: {{ records }}</p>
                             <p class="medium centered">Odovzdal: {{ records }}</p>
-                            {% if 'Silver Mine PLUS' in archive_records[4] %}
+                            {% if 'Silver Mine PLUS, s.r.o., Kvašov 43, 020 62 Kvašov, IČO: 55598439' in archive_records[4] %}
                                 <img src="{{ url_for('static', filename='images/plus.png') }}" alt="Obrázok">
-                            {% elif 'Silver Mine' in archive_records[4] %}
+                            {% elif 'Silver Mine, s.r.o, Kvašov 43, 020 62 Kvašov, IČO: 47 204 788' in archive_records[4] %}
                                 <img src="{{ url_for('static', filename='images/silver.png') }}" alt="Obrázok">
                             {% endif %}
                         </div>
