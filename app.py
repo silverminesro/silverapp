@@ -4,6 +4,8 @@ from refresh_data import refresh_data  # Importujeme funkciu refresh_data z refr
 from flask_wtf import FlaskForm
 from wtforms import StringField, DateField, SelectField
 from wtforms.validators import DataRequired
+from zipfile import ZipFile
+import os
 import random
 import string
 
@@ -383,6 +385,24 @@ def show_statistika_data():
 
     # Vrátenie údajov a ich zobrazenie v HTML šablóne
     return render_template('statistika.html', silver_mine_quantities=silver_mine_quantities, silver_mine_plus_quantities=silver_mine_plus_quantities)
+
+#Stiahnutie databáz cez tlačidlo "stiahnuť databazy" v admin.html
+@app.route('/download_databases', methods=['POST'])
+def download_databases():
+    # Zoznam názvov databáz
+    database_names = ['users.db', 'businesses.db', 'archiv.db']
+    # Cesta k adresáru s databázami
+    database_dir = os.path.dirname(__file__)
+
+    # Vytvorenie zip archívu
+    zip_path = 'databases.zip'
+    with ZipFile(zip_path, 'w') as zipf:
+        for db_name in database_names:
+            db_path = os.path.join(database_dir, db_name)
+            zipf.write(db_path, arcname=db_name)
+
+    # Odoslanie zip archívu ako súboru na sťahovanie
+    return send_file(zip_path, as_attachment=True)
 
 
 if __name__ == "__main__":

@@ -110,7 +110,7 @@
                             <p class="medium centered">Odovzdal: {{ records }}</p>
                             {% if 'Silver Mine PLUS' in archive_records[4] %}
                                 <img src="{{ url_for('static', filename='images/plus.png') }}" alt="Obrázok">
-                            {% else %}
+                            {% elif 'Silver Mine' in archive_records[4] %}
                                 <img src="{{ url_for('static', filename='images/silver.png') }}" alt="Obrázok">
                             {% endif %}
                         </div>
