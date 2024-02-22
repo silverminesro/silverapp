@@ -5,6 +5,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, DateField, SelectField
 from wtforms.validators import DataRequired
 from zipfile import ZipFile
+import atexit
+import shutil
 import os
 import random
 import string
@@ -404,6 +406,43 @@ def download_databases():
     # Odoslanie zip archívu ako súboru na sťahovanie
     return send_file(zip_path, as_attachment=True)
 
+
+# Získanie cesty k adresáru, v ktorom sa nachádza tento skript
+script_directory = os.path.dirname(__file__)
+
+# Cesta k adresáru s databázami
+database_dir = script_directory
+
+# Zoznam názvov databáz
+database_names = ['users.db', 'businesses.db', 'archiv.db']
+
+# Funkcia na zálohovanie všetkých databáz
+def backup_databases():
+    for db_name in database_names:
+        db_path = os.path.join(database_dir, db_name)
+        if os.path.exists(db_path):
+            # Skopírovanie existujúcej databázy do súboru s iným názvom
+            shutil.copyfile(db_path, db_path + '_backup')
+
+# Funkcia na obnovenie databáz
+def restore_databases():
+    for db_name in database_names:
+        backup_db_path = os.path.join(database_dir, db_name + '_backup')
+        if os.path.exists(backup_db_path):
+            # Obnovenie databázy zo zálohy
+            shutil.copyfile(backup_db_path, os.path.join(database_dir, db_name))
+            # Odstránenie zálohy
+            os.remove(backup_db_path)
+
+# Zálohovanie databáz pred vypnutím serveru
+@atexit.register
+def backup_on_exit():
+    backup_databases()
+
+# Obnovenie databáz pri spustení servera
+@app.before_request
+def restore_on_startup():
+    restore_databases()
 
 if __name__ == "__main__":
     app.run(debug=True)
