@@ -5,6 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, DateField, SelectField
 from wtforms.validators import DataRequired
 from zipfile import ZipFile
+import psycopg2
 import atexit
 import shutil
 import os
@@ -74,8 +75,7 @@ def index():
 # Ruta pre registráciu užívateľov
 @app.route('/register', methods=['POST', 'GET'])
 def register():
-    if 'user_id' not in session or session['user_id'] != 1:
-        return "Pristup zakázaný"  # Pokud uživatel není administrátor, zakáže se přístup
+
 
     if request.method == 'POST':
         username = request.form['username']
@@ -406,41 +406,6 @@ def download_databases():
     # Odoslanie zip archívu ako súboru na sťahovanie
     return send_file(zip_path, as_attachment=True)
 
-###
-# Získanie cesty k adresáru, v ktorom sa nachádza tento skript
-script_directory = os.path.dirname(__file__)
-
-# Cesta k adresáru s databázami
-database_dir = script_directory
-
-# Zoznam názvov databáz
-database_names = ['users.db', 'businesses.db', 'archiv.db']
-
-# Funkcia na zálohovanie všetkých databáz
-def backup_databases():
-    for db_name in database_names:
-        db_path = os.path.join(database_dir, db_name)
-        if os.path.exists(db_path):
-            backup_path = db_path + '_backup'
-            shutil.copyfile(db_path, backup_path)
-
-# Funkcia na obnovenie databáz zálohy
-def restore_databases():
-    for db_name in database_names:
-        backup_path = os.path.join(database_dir, db_name + '_backup')
-        db_path = os.path.join(database_dir, db_name)
-        if os.path.exists(backup_path):
-            shutil.copyfile(backup_path, db_path)
-
-# Zálohovanie databáz pred presunutím serveru do spiaceho režimu
-@atexit.register
-def backup_before_sleep():
-    backup_databases()
-
-# Obnovenie databáz po spustení serveru z spiaceho režimu
-@app.before_request
-def restore_after_wake_up():
-    restore_databases()
 
 if __name__ == "__main__":
     app.run(debug=True)
