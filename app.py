@@ -406,6 +406,34 @@ def download_databases():
     # Odoslanie zip archívu ako súboru na sťahovanie
     return send_file(zip_path, as_attachment=True)
 
+###externa databaza heroku
+def connect_to_postgres():
+    return psycopg2.connect(os.getenv("DATABASE_URL"))
+
+def migrate_data():
+    # Pripojenie k SQLite databáze
+    sqlite_connection = sqlite3.connect('archiv.db')
+    sqlite_cursor = sqlite_connection.cursor()
+
+    # Pripojenie k PostgreSQL databáze na Heroku
+    postgres_connection = connect_to_postgres()
+    postgres_cursor = postgres_connection.cursor()
+
+    # Selektovanie dát z SQLite tabuľky
+    sqlite_cursor.execute("SELECT * FROM archive;")
+    data = sqlite_cursor.fetchall()
+
+    # Vloženie dát do PostgreSQL tabuľky
+    for row in data:
+        postgres_cursor.execute("INSERT INTO archive (date, document_number, delivering, carrier, receiver, material, waste_name, carrier_name, ecv, quantity, poznamka) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);", row)
+    
+    # Potvrdenie transakcie
+    postgres_connection.commit()
+
+    # Zatvorenie pripojení
+    sqlite_connection.close()
+    postgres_connection.close()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
