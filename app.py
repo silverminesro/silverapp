@@ -5,7 +5,6 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, DateField, SelectField
 from wtforms.validators import DataRequired
 from zipfile import ZipFile
-from supabase_py import create_client  # Pridanie funkcie pre pripojenie k Supabase
 import psycopg2
 import atexit
 import shutil
@@ -67,37 +66,6 @@ def create_archive_table():
 create_table()
 create_business_table()
 create_archive_table()
-
-# Konfigurácia pre pripojenie k databáze na Supabase
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-
-# Vytvorenie klienta pre komunikáciu s databázou na Supabase
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# Táto funkcia bude zapisovať dáta do databázy na Supabase
-def save_to_supabase(date, document_number, delivering, carrier, receiver, material, waste_name, carrier_name, ecv, quantity, poznamka):
-    response = supabase.table('archiv').insert([
-        {
-            'date': date,
-            'document_number': document_number,
-            'delivering': delivering,
-            'carrier': carrier,
-            'receiver': receiver,
-            'material': material,
-            'waste_name': waste_name,
-            'carrier_name': carrier_name,
-            'ecv': ecv,
-            'quantity': quantity,
-            'poznamka': poznamka
-        }
-    ]).execute()
-
-    if response['status'] == 201:
-        return True  # Úspešne uložené do databázy na Supabase
-    else:
-        return False  # Chyba pri ukladaní dát do databázy na Supabase
-    
 
 # Presmerovanie na login.html po spustení aplikácie
 @app.route('/')
@@ -200,7 +168,6 @@ def admin():
     return render_template('admin.html')
 
 # Ruta pre pridanie záznamu do archívu
-# Ruta pre pridanie záznamu do archívu
 @app.route('/add_to_archive', methods=['GET', 'POST'])
 def add_to_archive():
     if 'user_id' not in session or session['user_id'] != 1:
@@ -209,27 +176,14 @@ def add_to_archive():
     form.document_number.data = generate_document_number()  # Nastavenie náhodného čísla
     form.delivering.choices = get_delivering_options()
     if form.validate_on_submit():
-        # Získanie údajov z formulára
-        date = form.date.data
-        document_number = form.document_number.data
-        delivering = form.delivering.data
-        carrier = form.carrier.data
-        receiver = form.receiver.data
-        material = form.material.data
-        waste_name = form.waste_name.data
-        carrier_name = form.carrier_name.data
-        ecv = form.ecv.data
-        quantity = form.quantity.data
-        poznamka = form.poznamka.data
-        
-        # Uloženie údajov do databázy na Supabase
-        success = save_to_supabase(date, document_number, delivering, carrier, receiver, material, waste_name, carrier_name, ecv, quantity, poznamka)
-        if success:
-            flash('Dáta boli úspešne uložené do archívu.')
-            return redirect(url_for('add_to_archive'))
-        else:
-            flash('Chyba pri ukladaní dát do archívu.')
-
+        conn = sqlite3.connect('archiv.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO archive (date, document_number, delivering, carrier, receiver, material, waste_name, carrier_name, ecv, quantity, poznamka) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  (form.date.data, form.document_number.data, form.delivering.data, form.carrier.data, form.receiver.data, form.material.data, form.waste_name.data, form.carrier_name.data, form.ecv.data, form.quantity.data, form.poznamka.data))
+        conn.commit()
+        conn.close()
+        flash('Dáta boli úspešne uložené do archívu.')
+        return redirect(url_for('add_to_archive'))
     return render_template('add_to_archive.html', form=form)
 
 # Ruta pre stránku archív zberných listov
