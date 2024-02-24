@@ -50,32 +50,11 @@
         button[type="submit"]:hover, button[type="button"]:hover {
             background-color: #0056b3;
         }
-        /* Štýl pre tlačidlo "Späť na admin" */
-        .back-btn {
-            background-color: #007bff; /* Červená farba pre tlačidlo */
-            margin-bottom: 10px; /* Trochu priestoru medzi tlačidlami */
-        }
-        .back-btn:hover {
-            background-color: #005cbe; /* Tmavšia červená farba pri hoveri */
-        }
-        .back-btn i {
-            margin-right: 5px; /* Trochu priestoru medzi ikonou a textom */
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Nový zberný list</h1>
-        <!-- Tlačidlo na návrat na admin.html -->
-        <div class="action-btns">
-            <form action="/admin" method="get">
-                <button class="btn back-btn"><i class="fas fa-arrow-left"></i> Späť na admin</button>
-            </form>
-            <form method="POST" id="archiveForm">
-                {{ form.hidden_tag() }}
-                <!-- Zvyšok formulára -->
-            </form>
-
         <form method="POST" id="archiveForm">
             {{ form.hidden_tag() }}
             <p>{{ form.date.label }}<br>{{ form.date }}</p>
