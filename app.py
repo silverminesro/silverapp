@@ -86,8 +86,6 @@ def index():
 # Ruta pre registráciu užívateľov
 @app.route('/register', methods=['POST', 'GET'])
 def register():
-
-
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -115,7 +113,11 @@ def register():
 
         return redirect(url_for('login'))
     else:
-        return render_template('register.html')
+        if 'user_id' not in session or session['user_id'] != 1:
+            return "Pristup zakázaný"  # Pokud uživatel není administrátor, zakáže se přístup
+        else:
+            return render_template('register.html')
+
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -211,6 +213,9 @@ def add_to_archive():
 # Ruta pre stránku archív zberných listov
 @app.route('/archive')
 def archive():
+    if 'user_id' not in session or session['user_id'] != 1:
+        return "Pristup zakázaný"  # Pokud uživatel není administrátor, zakáže se přístup
+    
     # Načítanie údajov priamo po načítaní stránky pomocou AJAX
     data = refresh_data()
     return render_template('archive.html', archive_records=data)
