@@ -5,6 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, DateField, SelectField
 from wtforms.validators import DataRequired
 from zipfile import ZipFile
+from datetime import datetime
 import psycopg2
 import atexit
 import shutil
@@ -63,9 +64,19 @@ def create_archive_table():
     conn.commit()
     conn.close()
 
+# Funkcia pre vytvorenie tabuľky logs
+def create_logs_table():
+    conn = sqlite3.connect('logs.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS logs
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT, timestamp TEXT, FOREIGN KEY(user_id) REFERENCES users(id))''')
+    conn.commit()
+    conn.close()
+
 create_table()
 create_business_table()
 create_archive_table()
+create_logs_table()
 
 # Presmerovanie na login.html po spustení aplikácie
 @app.route('/')
@@ -107,7 +118,6 @@ def register():
         return render_template('register.html')
 
 
-# Ruta pre prihlásenie užívateľa
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
@@ -115,10 +125,22 @@ def login():
         password = request.form['password']
 
         if spravne_prihlaseni(username, password):
-            # Presmerovanie na osobnú hlavnú stránku po úspešnom prihlásení
+            # Získanie informácií o používateľovi
             user_info = get_user_info(username)
-            session['user_id'] = user_info[0]  # Uloženie ID užívateľa do relácie
-            return redirect(url_for('personal_page', user_id=user_info[0]))
+            user_id = user_info[0]
+            # Uloženie ID užívateľa do relácie
+            session['user_id'] = user_id  
+            
+            # Zaznamenanie prihlásenia do databázy logs.db
+            conn = sqlite3.connect('logs.db')
+            c = conn.cursor()
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            c.execute("INSERT INTO logs (user_id, action, timestamp) VALUES (?, ?, ?)", (user_id, 'login', timestamp))
+            conn.commit()
+            conn.close()
+            
+            # Presmerovanie na osobnú hlavnú stránku po úspešnom prihlásení
+            return redirect(url_for('personal_page', user_id=user_id))
         else:
             return "Nesprávne prihlasovacie údaje. Skúste to znova."
     else:
