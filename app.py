@@ -12,25 +12,9 @@ import shutil
 import os
 import random
 import string
-import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'tajny_klic'
-
-# Funkcia pre hashovanie čísla v URL
-def hash_record_id(value):
-    if isinstance(value, int):
-        # Hashovanie čísla
-        hashed_value = hashlib.sha256(str(value).encode()).hexdigest()
-        return hashed_value
-    else:
-        return value
-
-# URL value preprocessor
-@app.url_value_preprocessor
-def preprocess_record_id(endpoint, values):
-    if 'record_id' in values:
-        values['record_id'] = hash_record_id(values['record_id'])
 
 # Funkcia pre generovanie náhodného čísla čísla dokladu
 def generate_document_number():
