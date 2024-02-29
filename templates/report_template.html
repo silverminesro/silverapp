@@ -114,6 +114,18 @@
                                 <img src="{{ url_for('static', filename='images/silver.png') }}" alt="Obrázok">
                             {% endif %}
                         </div>
+                            {% if 'Silver Mine PLUS, s.r.o., Kvašov 43, 020 62 Kvašov, IČO: 55598439' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/plus.png') }}" alt="Obrázok">
+                            {% elif 'Základná škola s materskou školou Pod hájom - MŠ' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/podhajom.png') }}" alt="Obrázok">
+                            {% elif 'Základná škola s materskou školou Pod hájom - ZŠ' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/podhajom.png') }}" alt="Obrázok">
+                            {% elif 'Základná škola s materskou školou Centrum I 32' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/ci32.png') }}" alt="Obrázok">
+                            {% elif 'Materská škola sv. Dominika Sávia' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/savia.png') }}" alt="Obrázok">
+                            {% else %}
+                            {% endif %}
                         {% if archive_records[11] != '0' %}
                             <div class="half-width right-align">
                                 <p class="medium"><strong>Počet nádob: </strong> {{ archive_records[11] }}</p>
