@@ -18,19 +18,19 @@ app = Flask(__name__)
 app.secret_key = 'tajny_klic'
 
 # Funkcia pre hashovanie čísla v URL
-def hash_report_number(value):
-    if value.isdigit():
+def hash_record_id(value):
+    if isinstance(value, int):
         # Hashovanie čísla
-        hashed_value = hashlib.sha256(value.encode()).hexdigest()
+        hashed_value = hashlib.sha256(str(value).encode()).hexdigest()
         return hashed_value
     else:
         return value
 
 # URL value preprocessor
 @app.url_value_preprocessor
-def preprocess_report_number(endpoint, values):
-    if 'report_number' in values:
-        values['report_number'] = hash_report_number(values['report_number'])
+def preprocess_record_id(endpoint, values):
+    if 'record_id' in values:
+        values['record_id'] = hash_record_id(values['record_id'])
 
 # Funkcia pre generovanie náhodného čísla čísla dokladu
 def generate_document_number():
@@ -337,22 +337,19 @@ def show_archive2():
 # Ruta pre zobrazenie šablóny reportu <--- táto cesta určuje generovanie reportu, ale len s ID 1, takže všetky reporty sú rovnaké!!!
 #@app.route('/report_template')
 def show_report_template():
-    try:
-        # Pripojenie k databáze
-        conn = sqlite3.connect('archiv.db')
-        c = conn.cursor()
+    
+    # Pripojenie k databáze
+    conn = sqlite3.connect('archiv.db')
+    c = conn.cursor()
+    
+    # Vykonanie SQL dotazu na vybratie všetkých záznamov
+    c.execute("SELECT * FROM archive")
+    rows = c.fetchone()
 
-        # Vykonanie SQL dotazu na vybratie všetkých záznamov
-        c.execute("SELECT * FROM archive")
-        rows = c.fetchone()
-
-        # Zatvorenie spojenia s databázou
-        conn.close()
-
-        return render_template('report_template.html', archive_records=rows)
-    except Exception as e:
-        # Spracovanie chyby
-        return render_template('error.html', message=str(e))
+    # Zatvorenie spojenia s databázou
+    conn.close()
+    
+    return render_template('report_template.html', archive_records=rows)
 
 @app.route('/report_template/<int:record_id>')
 def show_report_template(record_id):
