@@ -17,37 +17,26 @@ import hashlib
 app = Flask(__name__)
 app.secret_key = 'tajny_klic'
 
+# Funkcia pre hashovanie čísla v URL
+def hash_report_number(value):
+    if value.isdigit():
+        # Hashovanie čísla
+        hashed_value = hashlib.sha256(value.encode()).hexdigest()
+        return hashed_value
+    else:
+        return value
+
+# URL value preprocessor
+@app.url_value_preprocessor
+def preprocess_report_number(endpoint, values):
+    if 'report_number' in values:
+        values['report_number'] = hash_report_number(values['report_number'])
+
 # Funkcia pre generovanie náhodného čísla čísla dokladu
 def generate_document_number():
     min_length = 10
     digits = ''.join(random.choices(string.digits, k=min_length))
     return digits
-
-# Funkcia na hashovanie URL
-def hash_url(url):
-    return hashlib.sha256(url.encode()).hexdigest()
-
-# Middleware pre šifrovanie URL
-class URLHashMiddleware:
-    def __init__(self, app):
-        self.app = app
-
-    def __call__(self, environ, start_response):
-        def custom_start_response(status, headers, exc_info=None):
-            return start_response(status, headers, exc_info)
-
-        # Získanie pôvodnej URL
-        original_url = request.url
-
-        # Získanie hashu pôvodnej URL
-        hashed_url = hash_url(original_url)
-
-        # Nahradenie pôvodnej URL hashovanou URL
-        request.url = hashed_url
-
-        return self.app(environ, custom_start_response)
-
-
 
 class ArchiveForm(FlaskForm):
     date = DateField('Dátum', format='%Y-%m-%d', validators=[DataRequired()])
@@ -348,19 +337,22 @@ def show_archive2():
 # Ruta pre zobrazenie šablóny reportu <--- táto cesta určuje generovanie reportu, ale len s ID 1, takže všetky reporty sú rovnaké!!!
 #@app.route('/report_template')
 def show_report_template():
-    
-    # Pripojenie k databáze
-    conn = sqlite3.connect('archiv.db')
-    c = conn.cursor()
-    
-    # Vykonanie SQL dotazu na vybratie všetkých záznamov
-    c.execute("SELECT * FROM archive")
-    rows = c.fetchone()
+    try:
+        # Pripojenie k databáze
+        conn = sqlite3.connect('archiv.db')
+        c = conn.cursor()
 
-    # Zatvorenie spojenia s databázou
-    conn.close()
-    
-    return render_template('report_template.html', archive_records=rows)
+        # Vykonanie SQL dotazu na vybratie všetkých záznamov
+        c.execute("SELECT * FROM archive")
+        rows = c.fetchone()
+
+        # Zatvorenie spojenia s databázou
+        conn.close()
+
+        return render_template('report_template.html', archive_records=rows)
+    except Exception as e:
+        # Spracovanie chyby
+        return render_template('error.html', message=str(e))
 
 @app.route('/report_template/<int:record_id>')
 def show_report_template(record_id):
@@ -492,6 +484,4 @@ def migrate_data():
 
 
 if __name__ == "__main__":
-    # Inicializácia middleware pre šifrovanie URL
-    app.wsgi_app = URLHashMiddleware(app.wsgi_app)
     app.run(debug=True)
