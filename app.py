@@ -12,6 +12,7 @@ import shutil
 import os
 import random
 import string
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'tajny_klic'
@@ -21,6 +22,32 @@ def generate_document_number():
     min_length = 10
     digits = ''.join(random.choices(string.digits, k=min_length))
     return digits
+
+# Funkcia na hashovanie URL
+def hash_url(url):
+    return hashlib.sha256(url.encode()).hexdigest()
+
+# Middleware pre šifrovanie URL
+class URLHashMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        def custom_start_response(status, headers, exc_info=None):
+            return start_response(status, headers, exc_info)
+
+        # Získanie pôvodnej URL
+        original_url = request.url
+
+        # Získanie hashu pôvodnej URL
+        hashed_url = hash_url(original_url)
+
+        # Nahradenie pôvodnej URL hashovanou URL
+        request.url = hashed_url
+
+        return self.app(environ, custom_start_response)
+
+
 
 class ArchiveForm(FlaskForm):
     date = DateField('Dátum', format='%Y-%m-%d', validators=[DataRequired()])
@@ -462,5 +489,9 @@ def migrate_data():
     postgres_connection.close()
 
 
+
+
 if __name__ == "__main__":
+    # Inicializácia middleware pre šifrovanie URL
+    app.wsgi_app = URLHashMiddleware(app.wsgi_app)
     app.run(debug=True)
