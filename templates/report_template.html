@@ -312,6 +312,8 @@
                                 <img src="{{ url_for('static', filename='images/nronova.png') }}" alt="Obrázok">
                                 {% elif 'Gastro Snack s.r.o.' in archive_records[3] %}
                                 <img src="{{ url_for('static', filename='images/gastrosnack.png') }}" alt="Obrázok">
+                                {% elif 'Café d ́Art s.r.o., Slávičie údolie 10, 811 02 Bratislava - mestská časť Staré Mesto, IČO: 50961667 - Zmrzlina Led. Rovne' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/cafedart.png') }}" alt="Obrázok">
                             {% else %}
                             {% endif %}
                         {% if archive_records[11] != '0' %}
