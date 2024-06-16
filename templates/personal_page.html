@@ -88,6 +88,8 @@
         </form>
 
         <h2>Dokumenty</h2>
+        <a href="{{ url_for('statistika_2024', user_id=user_info[0]) }}" class="stats-btn"><strong>Štatistika 2024</strong></a> |
+        <a href="{{ url_for('payments', user_id=user_info[0]) }}" class="stats-btn"><strong>Úhrady</strong></a>
         
         <!-- Zobrazenie záznamov z databázy -->
         <ul>
@@ -104,17 +106,19 @@
                 <strong>Meno prepravcu:</strong> {{ record[8] }}<br>
                 <strong>ECV:</strong> {{ record[9] }}<br>
                 <strong>Množstvo v KG:</strong> {{ record[10] }}
-                <button class="generate-btn" onclick="generateReport('{{ record[0] }}')">Zobraziť zberný list</button> <!-- Pridané tlačidlo -->
+                <button class="generate-btn" onclick="generateReport('{{ user_info[0] }}', '{{ record[0] }}')">Zobraziť zberný list</button>
+ <!-- Pridané tlačidlo -->
             </li>
             {% endfor %}
         </ul>
     </div>
 
     <script>
-        function generateReport(recordId) {
-            var url = "/report_template/" + recordId;
+        function generateReport(userId, recordId) {
+            var url = "/user/" + userId + "/report_template/" + recordId;
             window.open(url, "_blank"); // Otvorenie v novom okne
         }
     </script>
+    
 </body>
 </html>

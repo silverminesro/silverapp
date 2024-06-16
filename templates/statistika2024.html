@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Štatistika 2024</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        p {
+            text-align: center;
+            color: #666;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .stats-table th, .stats-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            text-align: left;
+        }
+        .stats-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #333;
+        }
+        .stats-table tr:hover {
+            background-color: #e9e9e9;
+        }
+        .nav-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .nav-buttons a {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .nav-buttons a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Štatistika 2024</h1>
+        <div class="nav-buttons">
+            <!-- <a href="{{ url_for('potvrdenie_2024', user_id=user_id) }}">Potvrdenie 2024</a> -->
+        </div>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Prepravca</th>
+                    <th>Názov odpadu</th>
+                    <th>Množstvo odpadu (KG)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Tu môžete dynamicky generovať obsah tabuľky pomocou backendu (Flask), napríklad cez template jinja2 -->
+                {% for carrier, wastes in carriers_data.items() %}
+                    {% for waste_name, quantity in wastes.items() %}
+                        <tr>
+                            <td>{{ carrier }}</td>
+                            <td>{{ waste_name }}</td>
+                            <td>{{ quantity }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+                <!-- Tu sa načítajú údaje z databázy, pre každého záznamu sa vytvorí riadok v tabuľke -->
+            </tbody>
+        </table>
+        <br>
+        <span class="tooltip-icon">ℹ️</span>
+        <span class="tooltip-text">Zobrazená štatistika je počítaná od 1.3.2024.</span>
+    </div>
+</body>
+</html>

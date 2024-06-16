@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Úhrady</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .paid {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1>Úhrady</h1>
+        <p><strong>Spoločnosť:</strong> {{ payments_info.firma }}</p>
+        <table>
+            <tr>
+                <th>Mesiac</th>
+                <th>Dlžná suma / číslo faktúry</th>
+            </tr>
+            {% set months = {
+                '1': 'január 2024', '2': 'február 2024', '3': 'marec 2024',
+                '4': 'apríl 2024', '5': 'máj 2024', '6': 'jún 2024',
+                '7': 'júl 2024', '8': 'august 2024', '9': 'september 2024',
+                '10': 'október 2024', '11': 'november 2024', '12': 'december 2024'
+            } %}
+            {% for month, amount in payments_info.items() if month.startswith('mesiac_') and amount is not none %}
+            <tr>
+                <td>{{ months[month.split('_')[1]] }}</td>
+                <td>
+                    {% if amount == 0 or amount == 0.0 %}
+                        <span class="paid">faktúra uhradená</span>
+                    {% else %}
+                        {{ amount }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+        <span class="tooltip-icon">ℹ️</span>
+        <span class="tooltip-text">Platby sú aktualizované do 48 hodín.</span>
+        <br>
+        <span class="tooltip-icon">ℹ️</span>
+        <span class="tooltip-text">Zobrazené sú len neuhradené platby po splatnosti.</span>
+    </div>
+
+    <ul>
+        {% for month in existing_months %}
+            <li>{{ month }}</li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>

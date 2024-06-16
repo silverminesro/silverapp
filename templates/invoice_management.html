@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Správa faktúr</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .paid {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Správa faktúr</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User ID</th>
+                <th>Firma</th>
+                <th>Január 2024</th>
+                <th>Február 2024</th>
+                <th>Marec 2024</th>
+                <th>Apríl 2024</th>
+                <th>Máj 2024</th>
+                <th>Jún 2024</th>
+                <th>Júl 2024</th>
+                <th>August 2024</th>
+                <th>September 2024</th>
+                <th>Október 2024</th>
+                <th>November 2024</th>
+                <th>December 2024</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in all_data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    {% for i in range(3, 15) %}
+                        {% if row[i] == 0 or row[i] == 0.0 %}
+                            <td class="paid">uhradené</td>
+                        {% else %}
+                            <td>{{ row[i] }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

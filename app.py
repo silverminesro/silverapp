@@ -320,30 +320,38 @@ def show_archive2():
 ###
 # Ruta pre zobrazenie šablóny reportu <--- táto cesta určuje generovanie reportu, ale len s ID 1, takže všetky reporty sú rovnaké!!!
 #@app.route('/report_template')
-def show_report_template():
-    
-    # Pripojenie k databáze
-    conn = sqlite3.connect('archiv.db')
-    c = conn.cursor()
-    
-    # Vykonanie SQL dotazu na vybratie všetkých záznamov
-    c.execute("SELECT * FROM archive")
-    rows = c.fetchone()
-
-    # Zatvorenie spojenia s databázou
-    conn.close()
-    
-    return render_template('report_template.html', archive_records=rows)
-
-@app.route('/report_template/<int:record_id>')
-def show_report_template(record_id):
+# Pôvodná funkcia show_report_template pre zobrazenie všetkých záznamov
+# Funkcia show_report_template pre zobrazenie konkrétneho záznamu pre všetkých
+# Funkcia show_user_report_template pre zobrazenie konkrétneho záznamu pre užívateľa
+@app.route('/user/<int:user_id>/report_template/<int:record_id>')
+def show_user_report_template(user_id, record_id):
     try:
-        # Pripojenie k databáze
-        conn = sqlite3.connect('archiv.db')
+        # Skontrolovať, či session obsahuje user_id
+        if 'user_id' not in session:
+            return redirect(url_for('login'))  # Predpokladám, že máte login stránku
+
+        # Skontrolovať, či sa user_id v session zhoduje s user_id z URL
+        if session['user_id'] != user_id:
+            return "Prístup zakázaný: Nesprávne ID používateľa"
+
+        # Pripojenie k databáze users.db a overenie user_id a firma
+        conn_users = sqlite3.connect('users.db')
+        c_users = conn_users.cursor()
+        c_users.execute("SELECT id, firma FROM users WHERE id = ?", (user_id,))
+        user_row = c_users.fetchone()
+        conn_users.close()
+
+        if not user_row:
+            return "Prístup zakázaný: Nesprávne ID používateľa"
+
+        user_id_db, firma = user_row
+
+        # Pripojenie k databáze v režime iba na čítanie
+        conn = sqlite3.connect('file:archiv.db?mode=ro', uri=True)
         c = conn.cursor()
 
-        # Vykonanie SQL dotazu na vybratie údajov pre dané ID
-        c.execute("SELECT * FROM archive WHERE id = ?", (record_id,))
+        # Vykonanie SQL dotazu na vybratie údajov pre dané ID a overenie zhodnosti hodnoty firma a delivering
+        c.execute("SELECT * FROM archive WHERE id = ? AND delivering = ?", (record_id, firma))
         row = c.fetchone()
 
         # Zatvorenie spojenia s databázou
@@ -354,11 +362,37 @@ def show_report_template(record_id):
             return render_template('report_template.html', archive_records=row)
         else:
             # Ak sa záznam nenájde, vrátiť chybovú správu
-            return render_template('error.html', message="Záznam nebol nájdený.")
+            return render_template('error.html', message="Záznam nebol nájdený alebo nemáte prístup k tomuto záznamu.")
 
     except Exception as e:
         # Spracovanie chyby
         return render_template('error.html', message=str(e))
+
+# Odstránenie starej funkcie show_report_template, pretože už nie je potrebná
+# @app.route('/report_template/<int:record_id>')
+# def show_report_template(record_id):
+#     try:
+#         # Pripojenie k databáze v režime iba na čítanie
+#         conn = sqlite3.connect('file:archiv.db?mode=ro', uri=True)
+#         c = conn.cursor()
+
+#         # Vykonanie SQL dotazu na vybratie údajov pre dané ID
+#         c.execute("SELECT * FROM archive WHERE id = ?", (record_id,))
+#         row = c.fetchone()
+
+#         # Zatvorenie spojenia s databázou
+#         conn.close()
+
+#         if row:
+#             # Ak sa nájde záznam, preniesť údaje do šablóny
+#             return render_template('report_template.html', archive_records=row)
+#         else:
+#             # Ak sa záznam nenájde, vrátiť chybovú správu
+#             return render_template('error.html', message="Záznam nebol nájdený.")
+
+#     except Exception as e:
+#         # Spracovanie chyby
+#         return render_template('error.html', message=str(e))
 
 # Druhá definícia show_statistika pre načítanie iba stĺpcov delivering a quantity
 # Cesta pre štatistika.html
@@ -463,6 +497,207 @@ def migrate_data():
 
 
 
+from collections import defaultdict
+
+#@app.route('/user/<user_id>/statistika2024.html')
+#def statistika_2024(user_id):
+    #if session['user_id'] != user_id:
+        #return "Pristup zakázaný"
+    #if 'user_id' not in session:
+        #return redirect(url_for('login'))
+
+@app.route('/user/<user_id>/statistika2024.html')
+def statistika_2024(user_id):
+    # Skontrolovať, či session obsahuje user_id
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+
+    # Skontrolovať, či sa user_id v session zhoduje s user_id z URL
+    if str(session['user_id']) != str(user_id):
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+    
+    # Načítanie firmy používateľa z databázy users.db
+    conn_users = sqlite3.connect('users.db')
+    c_users = conn_users.cursor()
+    c_users.execute("SELECT firma FROM users WHERE id = ?", (user_id,))
+    user_company = c_users.fetchone()
+    conn_users.close()
+
+    if user_company:
+        # Načítanie záznamov z archívu, ktoré majú hodnotu "delivering" rovnakú ako firma používateľa
+        conn_archive = sqlite3.connect('archiv.db')
+        c_archive = conn_archive.cursor()
+        c_archive.execute("SELECT * FROM archive WHERE delivering = ?", (user_company[0],))
+        archive_records = c_archive.fetchall()
+        conn_archive.close()
+
+        # Spočítajte a súčet množstva položiek pre každého prepravcu a odpad
+        carriers_data = defaultdict(lambda: defaultdict(float))
+        for record in archive_records:
+            carriers_data[record[4]][record[7]] += float(record[10])
+
+        return render_template('statistika2024.html', user_id=user_id, carriers_data=carriers_data)
+    else:
+        # Ak nebola firma nájdená, vykonajte príslušnú obsluhu chyby
+        return render_template('error.html', message="Firma používateľa nebola nájdená.")
+
+@app.route('/user/<user_id>/potvrdenie2024.html')
+def potvrdenie_2024(user_id):
+    # Skontrolovať, či session obsahuje user_id
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+
+    # Skontrolovať, či sa user_id v session zhoduje s user_id z URL
+    if str(session['user_id']) != str(user_id):
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+    
+    odovzdavajuci = "Názov odovzdávajúcej spoločnosti"
+    prepravca = "Názov prepravcu"
+    preberajuci = "Názov preberajúcej spoločnosti"
+    registracne_cislo = "123456"
+    total_quantity = "5000"
+
+    return render_template('potvrdenie2024.html', odovzdavajuci=odovzdavajuci, prepravca=prepravca, preberajuci=preberajuci, registracne_cislo=registracne_cislo, total_quantity=total_quantity)
+
+
+
+# Funkcia pre načítanie názvov prevádzok z databázy do /admin/invoice_management
+@app.route('/admin/invoice_management')
+def invoice_management():
+    if 'user_id' not in session or session['user_id'] != 1:
+        return "Pristup zakázaný"  # Pokud uživatel není administrátor, zakáže se přístup
+    
+    # Získanie všech dat z tabulky "uhrady"
+    conn = sqlite3.connect(UHRADY_DB)
+    c = conn.cursor()
+    c.execute("SELECT * FROM uhrady")
+    all_data = c.fetchall()
+    conn.close()
+    
+    return render_template('invoice_management.html', all_data=all_data)
+
+
+
+
+
+# KOD DATABAZY PRE ÚHRADY
+
+USERS_DB = 'users.db'
+UHRADY_DB = 'uhrady.db'
+
+def create_uhrady_table():
+    # Pripojenie k databáze "users.db"
+    conn_existing = sqlite3.connect(USERS_DB)
+    c_existing = conn_existing.cursor()
+
+    # Získanie informácií zo stĺpcov "ID" a "firma" z databázy "users.db"
+    c_existing.execute('SELECT ID, firma FROM users')
+    data = c_existing.fetchall()
+
+    # Odpojenie od databáze "users.db"
+    conn_existing.close()
+
+    # Pripojenie k databáze "uhrady.db"
+    conn_new = sqlite3.connect(UHRADY_DB)
+    c_new = conn_new.cursor()
+
+    # Vytvorenie tabuľky "uhrady" s potrebnými stĺpcami
+    c_new.execute('''
+        CREATE TABLE IF NOT EXISTS uhrady (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER,
+            firma TEXT
+        )
+    ''')
+
+    # Získanie názvov existujúcich stĺpcov
+    c_new.execute('PRAGMA table_info(uhrady)')
+    existing_columns = [info[1] for info in c_new.fetchall()]
+
+    # Pridanie stĺpcov pre jednotlivé mesiace, ak neexistujú
+    for month in range(1, 13):
+        column_name = f'mesiac_{month}'
+        if column_name not in existing_columns:
+            c_new.execute(f'ALTER TABLE uhrady ADD COLUMN {column_name} REAL DEFAULT NULL')
+
+    # Vloženie údajov z "users.db" do "uhrady.db"
+    for row in data:
+        user_id, firma = row
+        # Skontrolujeme, či záznam už existuje
+        c_new.execute('SELECT * FROM uhrady WHERE user_id = ?', (user_id,))
+        existing_record = c_new.fetchone()
+        if not existing_record:
+            c_new.execute('INSERT INTO uhrady (user_id, firma) VALUES (?, ?)', (user_id, firma))
+
+    # Uloženie zmien a uzavretie pripojenia k databáze
+    conn_new.commit()
+    conn_new.close()
+
+    # Získanie mesiacov s hodnotami z databázy
+    conn_new = sqlite3.connect(UHRADY_DB)
+    c_new = conn_new.cursor()
+    c_new.execute("PRAGMA table_info(uhrady)")
+    columns = c_new.fetchall()
+    column_names = [column[1] for column in columns]
+    existing_months = [column for column in column_names if column.startswith('mesiac_') and column != 'mesiac_' and column != 'NULL']
+    conn_new.close()
+
+    # Preposlať zoznam existujúcich mesiacov do šablóny
+    return existing_months
+
+existing_months = create_uhrady_table()
+#print(existing_months)  # Pre kontrolu, či sú správne načítané mesiace
+
+###
+
+#KOD PRE UHRADY UžIVATELOV
+@app.route('/user/<int:user_id>/payments.html')
+def payments(user_id):
+    # Skontrolovať, či session obsahuje user_id
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+
+    # Skontrolovať, či sa user_id v session zhoduje s user_id z URL
+    if session['user_id'] != user_id:
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+
+    # Pripojenie k databáze 'uhrady.db' a získanie údajov pre daného používateľa podľa user_id
+    conn = sqlite3.connect(UHRADY_DB)
+    c = conn.cursor()
+    c.execute('SELECT firma, mesiac_1, mesiac_2, mesiac_3, mesiac_4, mesiac_5, mesiac_6, mesiac_7, mesiac_8, mesiac_9, mesiac_10, mesiac_11, mesiac_12 FROM uhrady WHERE user_id = ?', (user_id,))
+    payments_info = c.fetchone()
+    conn.close()
+
+    if not payments_info:
+        return "Žiadne informácie o úhradách pre tohto používateľa"
+
+    # Vytvorenie slovníka z výsledkov dotazu
+    payments_data = {
+        "firma": payments_info[0],
+        "mesiac_1": payments_info[1],
+        "mesiac_2": payments_info[2],
+        "mesiac_3": payments_info[3],
+        "mesiac_4": payments_info[4],
+        "mesiac_5": payments_info[5],
+        "mesiac_6": payments_info[6],
+        "mesiac_7": payments_info[7],
+        "mesiac_8": payments_info[8],
+        "mesiac_9": payments_info[9],
+        "mesiac_10": payments_info[10],
+        "mesiac_11": payments_info[11],
+        "mesiac_12": payments_info[12]
+    }
+
+    # Renderovanie šablóny 'payments.html' s údajmi o úhradách
+    return render_template('payments.html', payments_info=payments_data)
+
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+   
