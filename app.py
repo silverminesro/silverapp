@@ -368,31 +368,32 @@ def show_user_report_template(user_id, record_id):
         # Spracovanie chyby
         return render_template('error.html', message=str(e))
 
-# Odstránenie starej funkcie show_report_template, pretože už nie je potrebná
-# @app.route('/report_template/<int:record_id>')
-# def show_report_template(record_id):
-#     try:
-#         # Pripojenie k databáze v režime iba na čítanie
-#         conn = sqlite3.connect('file:archiv.db?mode=ro', uri=True)
-#         c = conn.cursor()
+@app.route('/report_template/<int:record_id>')
+def show_report_template(record_id):
+    if 'user_id' not in session or session['user_id'] != 1:
+        return "Pristup zakázaný"  # Pokud uživatel není administrátor, zakáže se přístup
+    try:
+        # Pripojenie k databáze
+        conn = sqlite3.connect('archiv.db')
+        c = conn.cursor()
 
-#         # Vykonanie SQL dotazu na vybratie údajov pre dané ID
-#         c.execute("SELECT * FROM archive WHERE id = ?", (record_id,))
-#         row = c.fetchone()
+        # Vykonanie SQL dotazu na vybratie údajov pre dané ID
+        c.execute("SELECT * FROM archive WHERE id = ?", (record_id,))
+        row = c.fetchone()
 
-#         # Zatvorenie spojenia s databázou
-#         conn.close()
+        # Zatvorenie spojenia s databázou
+        conn.close()
 
-#         if row:
-#             # Ak sa nájde záznam, preniesť údaje do šablóny
-#             return render_template('report_template.html', archive_records=row)
-#         else:
-#             # Ak sa záznam nenájde, vrátiť chybovú správu
-#             return render_template('error.html', message="Záznam nebol nájdený.")
+        if row:
+            # Ak sa nájde záznam, preniesť údaje do šablóny
+            return render_template('report_template.html', archive_records=row)
+        else:
+            # Ak sa záznam nenájde, vrátiť chybovú správu
+            return render_template('error.html', message="Záznam nebol nájdený.")
 
-#     except Exception as e:
-#         # Spracovanie chyby
-#         return render_template('error.html', message=str(e))
+    except Exception as e:
+        # Spracovanie chyby
+        return render_template('error.html', message=str(e))
 
 # Druhá definícia show_statistika pre načítanie iba stĺpcov delivering a quantity
 # Cesta pre štatistika.html
