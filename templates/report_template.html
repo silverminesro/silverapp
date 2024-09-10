@@ -318,6 +318,8 @@
                                 <img src="{{ url_for('static', filename='images/rbauto.png') }}" alt="Obrázok">
                                 {% elif 'SAHARA KEBAB s. r. o. Pod Juhom 7666 911 01 Trenčín, prevádzka L. Štúra, 019 01 Ilava IČO: 56291558' in archive_records[3] %}
                                 <img src="{{ url_for('static', filename='images/sahara.png') }}" alt="Obrázok">
+                                {% elif 'Podnik technických služieb mesta, s.r.o. ul. Športovcov 890 020 01 Púchov, IČO: 36321893' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/tsmpu.png') }}" alt="Obrázok">
                             {% else %}
                             {% endif %}
                         {% if archive_records[11] != '0' %}
