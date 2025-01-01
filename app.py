@@ -9,7 +9,7 @@ from datetime import datetime
 import psycopg2
 import atexit
 import shutil
-import os
+import os, re
 import random
 import string
 
@@ -159,22 +159,56 @@ def personal_page(user_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
+    # Ak user_id == 1, presmeruje na admin
     if user_id == 1:
         return redirect(url_for('admin'))
     
+    # Overenie, či prihlásený používateľ je rovnaký ako user_id v URL
     if session['user_id'] != user_id:
         return "Pristup zakázaný"
     
+    # 1. Načítanie user_info z tabuľky users
     user_info = get_user_info_by_id(user_id)
     
-    # Načítanie záznamov z archívu, ktoré patria danému používateľovi
+    # 2. Načítanie záznamov z archívu (archiv.db), ktoré patria danému používateľovi
     conn = sqlite3.connect('archiv.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM archive WHERE delivering = ?", (user_info[3],))  # Index 3 odkazuje na stĺpec "firma" v tabuľke users
+    c.execute("SELECT * FROM archive WHERE delivering = ?", (user_info[3],))  # user_info[3] = firma
     archive_records = c.fetchall()
     conn.close()
 
-    return render_template('personal_page.html', user_info=user_info, archive_records=archive_records)
+    # 3. Skontrolujeme businesses.db -> rocne_suhrny pre firmu používateľa
+    #    aby sme vedeli, či sa má zobraziť tlačidlo "Zobraziť potvrdenie 2024"
+    import os
+    db_path = os.path.join(os.path.dirname(__file__), 'businesses.db')
+    has_data = False  # prednastavíme na False
+
+    # Firma používateľa
+    firma = user_info[3]  # to isté, čo sme použili vyššie (delivering)
+
+    # Skúsime vyhľadať riadok v rocne_suhrny, kde stĺpec name = firma
+    if os.path.exists(db_path):
+        conn_b = sqlite3.connect(db_path)
+        c_b = conn_b.cursor()
+        c_b.execute("SELECT * FROM rocne_suhrny WHERE name = ?", (firma,))
+        row = c_b.fetchone()
+        conn_b.close()
+
+        if row:
+            # row = (id, name, rok2024_200108, rok2024_200125, ...)
+            # Overíme, či aspoň jeden stĺpec (od indexu 2 vyššie) nie je None
+            # t.j. aby neboli všetky stĺpce v ročnom súhrne prázdne
+            if any(field is not None for field in row[2:]):
+                has_data = True
+
+    # 4. Vrátime šablónu personal_page.html so všetkými premennými
+    return render_template(
+        'personal_page.html',
+        user_info=user_info,
+        archive_records=archive_records,
+        has_data=has_data
+    )
+
 
 
 # Ruta pre odhlásenie užívateľa
@@ -394,6 +428,63 @@ def show_report_template(record_id):
     except Exception as e:
         # Spracovanie chyby
         return render_template('error.html', message=str(e))
+
+
+
+@app.route('/user/<int:user_id>/report_template_2024/<int:record_id>')
+def show_user_report_template_2024(user_id, record_id):
+    """
+    Len používateľ so session['user_id'] == user_id
+    môže zobraziť záznam, kde v stĺpci 'delivering'
+    je firma toho istého používateľa.
+    """
+    import os
+    import sqlite3
+
+    # 1) Overenie session
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Nie ste prihlásený."
+    if session['user_id'] != user_id:
+        return "Prístup zakázaný: Nesprávne ID používateľa."
+
+    # 2) Z users.db vytiahneme 'firma' (predpokladáme, že tam má používateľ uložený nejaký identifikátor)
+    conn_users = sqlite3.connect('users.db')
+    c_users = conn_users.cursor()
+    c_users.execute("SELECT firma FROM users WHERE id = ?", (user_id,))
+    user_row = c_users.fetchone()
+    conn_users.close()
+
+    if not user_row:
+        return "Používateľ so zadaným ID neexistuje."
+    
+    # firma = napr. "Obec Horovce, IČO: ...."
+    firma = user_row[0]
+
+    # 3) Pripojenie k zberne_listy_2024.db a SELECT s filtrom na ID a delivering
+    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2024.db')
+    conn_archive = sqlite3.connect(db_path)
+    c_archive = conn_archive.cursor()
+
+    # Filtrujeme, aby sedelo ID aj delivering
+    c_archive.execute("""
+        SELECT * FROM archive
+        WHERE id = ?
+          AND delivering = ?
+    """, (record_id, firma))
+    
+    row = c_archive.fetchone()
+    conn_archive.close()
+
+    # 4) Vyhodnotenie výsledku
+    if row:
+        # Záznam patrí tomuto používateľovi (podľa delivering = jeho firma)
+        return render_template('report_template.html', archive_records=row)
+    else:
+        return render_template('error.html', message="Záznam nebol nájdený alebo nepatrí tomuto používateľovi.")
+
+
+
+
 
 # Druhá definícia show_statistika pre načítanie iba stĺpcov delivering a quantity
 # Cesta pre štatistika.html
@@ -693,6 +784,133 @@ def payments(user_id):
     return render_template('payments.html', payments_info=payments_data)
 
 
+
+@app.route('/user/<int:user_id>/potvrdenia')
+def potvrdenia(user_id):
+    # Skontrolovať, či session obsahuje user_id
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+    
+    # Skontrolovať, či sa user_id v session zhoduje s user_id z URL
+    if session['user_id'] != user_id:
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+    
+    """
+    Jednoduchá stránka s prehľadom potvrdení,
+    kde môžeš postupne pridávať odkazy na jednotlivé potvrdenia.
+    """
+    return render_template('potvrdenia.html')
+
+
+
+@app.route('/user/<int:user_id>/potvrdenie_rok_2024')
+def show_potvrdenie_rok_2024(user_id):
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+    if session['user_id'] != user_id:
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+
+    import sqlite3, os
+
+    # 1) Z users.db vytiahni firmu (alebo name) pre tohto user_id
+    users_db_path = os.path.join(os.path.dirname(__file__), 'users.db')
+    conn_users = sqlite3.connect(users_db_path)
+    c_users = conn_users.cursor()
+    c_users.execute("SELECT firma FROM users WHERE id = ?", (user_id,))
+    row_user = c_users.fetchone()
+    conn_users.close()
+
+    if not row_user:
+        return "Používateľ neexistuje v tabuľke 'users'."
+
+    firma = row_user[0]  # Napríklad "Obec Horovce" alebo "ABC s.r.o."
+
+    # 2) V businesses.db -> rocne_suhrny -> stĺpec 'name'  
+    #    musí obsahovať rovnakú hodnotu ako firma
+    db_path = os.path.join(os.path.dirname(__file__), 'businesses.db')
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    # Vyber záznam, kde name = firma
+    c.execute("SELECT * FROM rocne_suhrny WHERE name = ?", (firma,))
+    row = c.fetchone()
+    conn.close()
+
+    if not row:
+        return f"V tabuľke 'rocne_suhrny' nie je záznam s name = '{firma}'"
+
+    # row = (id, name, rok2024_200108, rok2024_200125, ...)  - len príklad
+    # Ulož si to do nejakej štruktúry, aby sa ti dobre prenášalo do šablóny
+    data = {
+        "name": row[1],
+        "rok2024_200108": row[2],
+        "rok2024_200125": row[3],
+        "rok2024_190819": row[4],
+        # Zvyšné stĺpce podľa skutočnej štruktúry (index 2, 3, 4,...)
+        # napr. "rk_2024_200108": row[2],
+        # ...
+    }
+
+    # Vráť šablónu, napr. potvrdenie_rok_2024.html
+    return render_template('potvrdenie_rok_2024.html', data=data)
+
+
+
+
+
+@app.route('/archiv-zbernych-dokladov/<int:user_id>')
+def archiv_zbernych_dokladov(user_id):
+    # Kontrola session
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+    if session['user_id'] != user_id:
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+
+ # 1. Zisti firmu používateľa (user_id) z tabuľky users
+    conn_users = sqlite3.connect('users.db')
+    c_users = conn_users.cursor()
+    c_users.execute("SELECT firma FROM users WHERE id = ?", (user_id,))
+    user_row = c_users.fetchone()
+    conn_users.close()
+
+    if not user_row:
+        return "Používateľ s týmto ID neexistuje."
+
+    # firma = napr. "Obec Horovce, IČO: 0017306"
+    firma = user_row[0]
+
+    # 2. Pripojenie k DB zberne_listy_2024.db
+    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2024.db')
+    conn_archive = sqlite3.connect(db_path)
+    c_archive = conn_archive.cursor()
+
+    # 3. SELECT len tie záznamy, kde delivering je rovnaké ako firma užívateľa
+    c_archive.execute("SELECT * FROM archive WHERE delivering = ?", (firma,))
+    archive_records = c_archive.fetchall()
+    conn_archive.close()
+
+    # 4. Šablóna
+    return render_template('archiv_zbernych_dokladov.html', archive_records=archive_records)
+
+
+
+def get_available_years():
+    """
+    Prejde priečinok 'archivy/' a vráti zoznam rokov,
+    pre ktoré existuje 'zberne_listy_YYYY.db'.
+    """
+    folder = os.path.join(os.path.dirname(__file__), 'archivy')
+    pattern = r"^zberne_listy_(\d{4})\.db$"
+    years = []
+    
+    for filename in os.listdir(folder):
+        match = re.match(pattern, filename)
+        if match:
+            year = int(match.group(1))
+            years.append(year)
+    
+    years.sort()
+    return years
 
 
 
