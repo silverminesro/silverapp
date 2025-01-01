@@ -57,7 +57,10 @@
         <h1>Nový zberný list</h1>
         <form method="POST" id="archiveForm">
             {{ form.hidden_tag() }}
-            <p>{{ form.date.label }}<br>{{ form.date }}</p>
+            <p>
+                {{ form.date.label }}<br>
+                <input type="date" id="date" name="date">
+            </p>
             <p>{{ form.document_number.label }}<br>{{ form.document_number }}</p>
             <p>{{ form.delivering.label }}<br>
                 <select name="delivering">
@@ -110,10 +113,16 @@
     </div>
 
     <script>
+        // Prednastavenie aktuálneho dátumu pre pole dátum
+        document.addEventListener("DOMContentLoaded", function() {
+            const dateInput = document.getElementById("date");
+            const today = new Date().toISOString().split("T")[0];
+            dateInput.value = today;
+        });
+
         document.getElementById("archiveForm").addEventListener("submit", function(event){
             alert("Údaje boli úspešne uložené do databázy");
         });
     </script>
 </body>
 </html>
-

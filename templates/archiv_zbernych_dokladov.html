@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <title>Archív zberných dokladov</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #ddd;
+    }
+
+    /* Kompaktné tlačidlo "Otvoriť" */
+    .open-btn {
+      background-color: #2196F3;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 3px;
+      text-decoration: none;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .open-btn:hover {
+      background-color: #0b7dda;
+    }
+  </style>
+</head>
+<body>
+  <h1>Archív zberných dokladov z roku 2024</h1>
+  
+ <!-- <p>Nižšie je zoznam záznamov z tabuľky <code>archive</code>.</p>-->
+  
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Dátum</th>
+        <th>Číslo dokladu</th>
+        <th>Odovzdávajúci</th>
+        <th>Prepravca</th>
+        <!-- Preberajúci a materiál sme vynechali -->
+        <th>Názov odpadu</th>
+        <th>Zberný list</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if archive_records %}
+        {% for record in archive_records %}
+          <!-- Tu pridávame podmienky na základe record[7], kde je waste_name -->
+          <tr
+            {% if record[7] == '20 01 25 jedlé oleje a tuky' %}
+              style="background-color: #fff9c4;"  <!-- jemne žltá -->
+            {% elif record[7] == '19 08 09 zmesi tukov a olejov z odlučovačov oleja z vody obsahujúce jedlé oleje a tuky' %}
+              style="background-color: #e3f2fd;"  <!-- jemne modrá -->
+            {% else %}
+              <!-- Nechaj bez štýlu, napr. pre 20 01 08 alebo čokoľvek iné -->
+            {% endif %}
+          >
+            <!-- ID -->
+            <td>{{ record[0] }}</td>  <!-- id -->
+            <!-- Dátum -->
+            <td>{{ record[1] }}</td>  <!-- date -->
+            <!-- Číslo dokladu -->
+            <td>{{ record[2] }}</td>  <!-- document_number -->
+            <!-- Odovzdávajúci -->
+            <td>{{ record[3] }}</td>  <!-- delivering -->
+            <!-- Prepravca -->
+            <td>{{ record[4] }}</td>  <!-- carrier -->
+            <!-- Názov odpadu -->
+            <td>{{ record[7] }}</td>  <!-- waste_name -->
+            
+            <td>
+              <!-- Tlačidlo Otvoriť (kompaktné) -->
+              <a href="{{ url_for('show_user_report_template_2024', user_id=session['user_id'], record_id=record[0]) }}"
+                 class="open-btn">
+                Otvoriť
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="7">Žiadne záznamy pre tohto používateľa.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</body>
+</html>

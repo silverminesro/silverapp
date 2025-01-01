@@ -1,97 +1,170 @@
 <!DOCTYPE html>
-<!-- Toto je komentár pred nadpisom Osobná stránka -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osobná stránka</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f2f2f2; /* Zmena farby pozadia */
+            background-color: #eaeff3;
         }
         .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 5px;
-            background-color: #fff;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Pridaný tieň */
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 25px;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
-        h1 {
+        h1, h2 {
             text-align: center;
-            color: #333;
+            color: #333333;
         }
         p {
             text-align: center;
-            color: #666;
+            color: #555555;
+            font-size: 1.1em;
         }
         .logout-btn {
             float: right;
             background-color: #007bff;
-            color: #fff;
-            padding: 8px 16px;
+            color: #ffffff;
+            padding: 10px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             cursor: pointer;
-            transition: background-color 0.3s ease; /* Plynulý prechod farby */
+            transition: all 0.3s ease;
+            font-size: 0.9em;
         }
         .logout-btn:hover {
-            background-color: #0056b3; /* Zmena farby po najazdení myšou */
+            background-color: #0056b3;
         }
         h2 {
-            color: #333;
-            border-bottom: 1px solid #ccc; /* Pridaná čiara pod nadpisom */
+            border-bottom: 2px solid #f0f0f0;
             padding-bottom: 10px;
-            margin-bottom: 20px; /* Vzdialenosť od záznamov */
+            margin-bottom: 20px;
         }
         ul {
             padding: 0;
         }
         li {
             list-style: none;
-            background-color: #f9f9f9; /* Farba pozadia pre záznamy */
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Pridaný tieň */
+            background-color: #f9fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, background-color 0.2s ease;
         }
         li:hover {
-            background-color: #e9e9e9; /* Zmena farby po najazdení myšou */
+            background-color: #f1f3f5;
+            transform: translateY(-5px);
         }
         strong {
-            color: #007bff; /* Farba pre silné písmo */
+            color: #0056b3;
         }
         .generate-btn {
-            background-color: #28a745; /* Zelená farba pre tlačidlo */
-            color: #fff;
-            padding: 5px 10px;
+            display: inline-block;
+            margin-top: 10px;
+            background-color: #28a745;
+            color: #ffffff;
+            padding: 10px 15px;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             cursor: pointer;
-            transition: background-color 0.3s ease; /* Plynulý prechod farby */
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
         }
         .generate-btn:hover {
-            background-color: #218838; /* Zmena farby po najazdení myšou */
+            background-color: #218838;
+        }
+        .stats-btn {
+            display: inline-block;
+            color: #ffffff;
+            background-color: #007bff;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 0.9em;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .stats-btn:hover {
+            background-color: #0056b3;
+        }
+        .button-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* Loading screen styles */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s ease;
+        }
+        #loading.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!--<h1>Osobní stránka</h1> -->
-        <!--<p>Vítejte na vaší osobní stránce!</p>-->
+    <div id="loading">
+        <div class="spinner"></div>
+    </div>
 
-        <!-- Tlačidlo na odhlásenie -->
-        <form action="/logout" method="get" class="logout-btn">
-            <input type="submit" value="Odhlásiť sa">
+    <div class="container">
+        <form action="/logout" method="get">
+            <input type="submit" value="Odhlásiť sa" class="logout-btn">
         </form>
 
         <h2>Dokumenty</h2>
-        <a href="{{ url_for('statistika_2024', user_id=user_info[0]) }}" class="stats-btn"><strong>Štatistika 2024</strong></a> |
-        <a href="{{ url_for('payments', user_id=user_info[0]) }}" class="stats-btn"><strong>Úhrady</strong></a>
-        
-        <!-- Zobrazenie záznamov z databázy -->
+        <div class="button-container">
+          <!--  <a href="{{ url_for('statistika_2024', user_id=user_info[0]) }}" class="stats-btn">Štatistika 2024</a>-->
+            <a href="{{ url_for('archiv_zbernych_dokladov', user_id=user_info[0]) }}" class="stats-btn">Archív zberných dokladov</a>
+            <!-- Podmienené tlačidlo pre potvrdenie 2024 -->
+{% if has_data %}
+    <a href="{{ url_for('show_potvrdenie_rok_2024', user_id=user_info[0]) }}" class="stats-btn">Zobraziť potvrdenie 2024</a>
+{% else %}
+  <p>Potvrdenie za rok 2024 čoskoro</p>
+{% endif %}
+            
+            
+
+
+              <!--<a href="{{ url_for('show_potvrdenie_rok_2024', user_id=user_info[0]) }}" class="stats-btn">Zobraziť Potvrdenie 2024</a>-->
+              <!-- <a href="{{ url_for('payments', user_id=user_info[0]) }}" class="stats-btn">Úhrady</a> -->
+        </div>
+
         <ul>
             {% for i in range(archive_records|length - 1, -1, -1) %}
             {% set record = archive_records[i] %}
@@ -105,20 +178,29 @@
                 <strong>Názov odpadu:</strong> {{ record[7] }}<br>
                 <strong>Meno prepravcu:</strong> {{ record[8] }}<br>
                 <strong>ECV:</strong> {{ record[9] }}<br>
-                <strong>Množstvo v KG:</strong> {{ record[10] }}
+                <strong>Množstvo v KG:</strong> {{ record[10] }}<br>
                 <button class="generate-btn" onclick="generateReport('{{ user_info[0] }}', '{{ record[0] }}')">Zobraziť zberný list</button>
- <!-- Pridané tlačidlo -->
             </li>
             {% endfor %}
         </ul>
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loadingScreen = document.getElementById("loading");
+
+            // Simulate loading
+            loadingScreen.classList.add("active");
+
+            setTimeout(() => {
+                loadingScreen.classList.remove("active");
+            }, 2000); // Simulate a 2-second loading time
+        }); 
+
         function generateReport(userId, recordId) {
             var url = "/user/" + userId + "/report_template/" + recordId;
-            window.open(url, "_blank"); // Otvorenie v novom okne
+            window.open(url, "_blank");
         }
     </script>
-    
 </body>
 </html>
