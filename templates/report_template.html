@@ -324,6 +324,8 @@
                                 <img src="{{ url_for('static', filename='images/melcice.png') }}" alt="Obrázok">
                                 {% elif 'Marcela Chlebanová, 01861 Visolaje 189, prevádzka: 02001 Púchov, Pod Lachovcom 1727, IČO: 54485321' in archive_records[3] %}
                                 <img src="{{ url_for('static', filename='images/mchlebanova.png') }}" alt="Obrázok">
+                                {% elif 'Spojená škola, I. Krasku 491 Púchov, IČO: 52439585' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/ikrasku.png') }}" alt="Obrázok">
                             {% else %}
                             {% endif %}
                         {% if archive_records[11] != '0' %}
