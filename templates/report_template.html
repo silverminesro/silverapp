@@ -326,6 +326,14 @@
                                 <img src="{{ url_for('static', filename='images/mchlebanova.png') }}" alt="Obrázok">
                                 {% elif 'Spojená škola, I. Krasku 491 Púchov, IČO: 52439585' in archive_records[3] %}
                                 <img src="{{ url_for('static', filename='images/ikrasku.png') }}" alt="Obrázok">
+                                {% elif 'DALUG s.r.o., Tulipánová 1801/15 020 01 Púchov, IČO: 55464602' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/dalug.png') }}" alt="Obrázok">
+                                {% elif 'Dobros s. r. o. - Púchov, Štefániková 816, IČO: 51441519' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/dobrospu.png') }}" alt="Obrázok">
+                                {% elif '1992, s. r. o. Tuchyňa 17 018 55 Tuchyňa, prevádzka: pekáreň KLAS Kvašov, IČO: 53291085' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/klas.png') }}" alt="Obrázok">
+                                {% elif 'MŠ Kvašov, Kvašov 16, IČO: 00692387' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/mskvasov.png') }}" alt="Obrázok">
                             {% else %}
                             {% endif %}
                         {% if archive_records[11] != '0' %}
