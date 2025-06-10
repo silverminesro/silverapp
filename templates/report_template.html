@@ -334,6 +334,8 @@
                                 <img src="{{ url_for('static', filename='images/klas.png') }}" alt="Obrázok">
                                 {% elif 'MŠ Kvašov, Kvašov 16, IČO: 00692387' in archive_records[3] %}
                                 <img src="{{ url_for('static', filename='images/mskvasov.png') }}" alt="Obrázok">
+                                {% elif 'ELDISY Slovakia spol. s. r. o., Dubnica nad Váhom, IČO: 36657000' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/eldisy2.png') }}" alt="Obrázok">
                             {% else %}
                             {% endif %}
                         {% if archive_records[11] != '0' %}
