@@ -336,6 +336,10 @@
                                 <img src="{{ url_for('static', filename='images/mskvasov.png') }}" alt="Obrázok">
                                 {% elif 'ELDISY Slovakia spol. s. r. o., Dubnica nad Váhom, IČO: 36657000' in archive_records[3] %}
                                 <img src="{{ url_for('static', filename='images/eldisy2.png') }}" alt="Obrázok">
+                                {% elif 'Lenka Juríčková, 01853 Borčice 261, IČO: 55784437' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/cukrarskavyroba.png') }}" alt="Obrázok">
+                                {% elif 'Obec Mojtín, 020 72 Mojtín 242, IČO: 00317543' in archive_records[3] %}
+                                <img src="{{ url_for('static', filename='images/mojtin.png') }}" alt="Obrázok">
                             {% else %}
                             {% endif %}
                         {% if archive_records[11] != '0' %}
