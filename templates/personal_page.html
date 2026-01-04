@@ -135,6 +135,23 @@
                 transform: rotate(360deg);
             }
         }
+    
+        .info-message {
+            margin-top: 15px;
+            display: inline-block;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #333333;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 1.0em;
+            line-height: 1.35;
+        }
+        .info-message a {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
     </style>
 </head>
 <body>
@@ -154,7 +171,7 @@
             <!-- Podmienené tlačidlo pre potvrdenie 2024 -->
             <a href="https://www.isoh.gov.sk/uvod/zivotna-situacia-ohlasenie/INFORMACIE-K-PODANIU-Ohlasenia-o-vzniku-odpadu-a-nakladani-s-nim" class="stats-btn" target="_blank" rel="noopener noreferrer" >Ohlásenie návod</a>
 {% if has_data %}
-    <a href="{{ url_for('show_potvrdenie_rok_2024', user_id=user_info[0]) }}" class="stats-btn">Zobraziť potvrdenie 2024</a>
+    <!--<a href="{{ url_for('show_potvrdenie_rok_2024', user_id=user_info[0]) }}" class="stats-btn">Zobraziť potvrdenie 2024</a> -->
 
 {% endif %}
         
@@ -164,6 +181,14 @@
               <!--<a href="{{ url_for('show_potvrdenie_rok_2024', user_id=user_info[0]) }}" class="stats-btn">Zobraziť Potvrdenie 2024</a>-->
               <!-- <a href="{{ url_for('payments', user_id=user_info[0]) }}" class="stats-btn">Úhrady</a> -->
         </div>
+
+
+        <div class="info-message">
+            Zberné listy od 1.1.2026 nájdete na
+            <a href="https://www.binroute.silvermine.sk/login" target="_blank" rel="noopener noreferrer">https://www.binroute.silvermine.sk/login</a>.
+            Prístup Vám bude udelený v blízkej dobe.
+        </div>
+
 
         <ul>
             {% for i in range(archive_records|length - 1, -1, -1) %}
