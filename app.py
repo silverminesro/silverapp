@@ -460,8 +460,8 @@ def show_user_report_template_2024(user_id, record_id):
     # firma = napr. "Obec Horovce, IČO: ...."
     firma = user_row[0]
 
-    # 3) Pripojenie k zberne_listy_2024.db a SELECT s filtrom na ID a delivering
-    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2024.db')
+    # 3) Pripojenie k zberne_listy_2025.db a SELECT s filtrom na ID a delivering
+    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2025.db')
     conn_archive = sqlite3.connect(db_path)
     c_archive = conn_archive.cursor()
 
@@ -879,8 +879,8 @@ def archiv_zbernych_dokladov(user_id):
     # firma = napr. "Obec Horovce, IČO: 0017306"
     firma = user_row[0]
 
-    # 2. Pripojenie k DB zberne_listy_2024.db
-    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2024.db')
+    # 2. Pripojenie k DB zberne_listy_2025.db
+    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2025.db')
     conn_archive = sqlite3.connect(db_path)
     c_archive = conn_archive.cursor()
 
