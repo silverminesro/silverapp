@@ -167,19 +167,12 @@
         <h2>Dokumenty</h2>
         <div class="button-container">
           <!--  <a href="{{ url_for('statistika_2024', user_id=user_info[0]) }}" class="stats-btn">Štatistika 2024</a>-->
-            <a href="{{ url_for('archiv_zbernych_dokladov', user_id=user_info[0]) }}" class="stats-btn">Archív zberných dokladov</a>
-            <!-- Podmienené tlačidlo pre potvrdenie 2024 -->
+            <a href="{{ url_for('archiv_zbernych_listov_2025', user_id=user_info[0]) }}" class="stats-btn">Archív zberných listov 2025</a>
             <a href="https://www.isoh.gov.sk/uvod/zivotna-situacia-ohlasenie/INFORMACIE-K-PODANIU-Ohlasenia-o-vzniku-odpadu-a-nakladani-s-nim" class="stats-btn" target="_blank" rel="noopener noreferrer" >Ohlásenie návod</a>
-{% if has_data %}
-    <!--<a href="{{ url_for('show_potvrdenie_rok_2024', user_id=user_info[0]) }}" class="stats-btn">Zobraziť potvrdenie 2024</a> -->
-
+            <a href="{{ url_for('show_potvrdenie_kuch_odpad_2025', user_id=user_info[0]) }}" class="stats-btn">Potvrdenie kuch. odpad 2025</a>
+{% if has_oleje_tuky %}
+            <a href="{{ url_for('show_potvrdenie_oleje_tuky_2025', user_id=user_info[0]) }}" class="stats-btn">Potvrdenie oleje a tuky 2025</a>
 {% endif %}
-        
-            
-
-
-              <!--<a href="{{ url_for('show_potvrdenie_rok_2024', user_id=user_info[0]) }}" class="stats-btn">Zobraziť Potvrdenie 2024</a>-->
-              <!-- <a href="{{ url_for('payments', user_id=user_info[0]) }}" class="stats-btn">Úhrady</a> -->
         </div>
 
 

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <title>Potvrdenie o zhodnotení olejov a tukov (2025)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      line-height: 1.4;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .section-title {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 20px;
+    }
+    .info-block {
+      margin-bottom: 15px;
+    }
+    .signature-block {
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2 style="text-align: center;">Potvrdenie o zhodnotení olejov a tukov 2025</h2>
+
+  <div class="info-block">
+    <span class="section-title">Vydané pre:</span>
+    <p>
+      <strong>Pôvodca odpadu (firma):</strong> {{ data.name }}<br>
+    </p>
+  </div>
+
+  <div class="info-block">
+    <span class="section-title">Údaje o zhodnocovanom odpade a spôsobe zhodnocovania:</span>
+    <p>
+    {% if data.rok2025_200125 and data.rok2025_200125 != 0 %}
+      <strong>Komodita:</strong> použité jedlé oleje a tuky<br>
+      <strong>Katalógové číslo odpadu:</strong> 20 01 25<br>
+      <strong>Množstvo:</strong> 
+        {{ data.rok2025_200125 if data.rok2025_200125 else 0 }} kg<br>
+      <strong>Spôsob zhodnotenia odpadu:</strong> V<br>
+    </p>
+  </div>
+
+  <div class="info-block">
+    <span class="section-title">Zhodnotil:</span>
+    <p>
+        CMT Group s. r. o. Panenská 13, 811 03, Bratislava, <strong>IČO:</strong> 47 372 141
+    </p>
+  </div>
+  {% endif %}
+
+  {% if data.rok2025_190819 and data.rok2025_190819 != 0 %}
+  ----------------
+  <div class="info-block">
+    <strong>Komodita:</strong> zmesi tukov a olejov z odlučovačov oleja z vody obsahujúce jedlé oleje a tuky<br>
+    <strong>Katalógové číslo odpadu:</strong> 19 08 09<br>
+    <strong>Množstvo:</strong> 
+      {{ data.rok2025_190819 if data.rok2025_190819 else 0 }} kg<br>
+    <strong>Spôsob zhodnotenia odpadu:</strong> R3<br>
+    <strong>Stručný popis spôsobu zhodnotenia:</strong> drtenie, miešanie, hygienizácia<br>
+  </p>
+</div>
+<div class="info-block">
+    <span class="section-title">Zhodnotil:</span>
+    <p>
+        BIOPLYN BIEROVCE s.r.o., Rybárska 758/18 911 01 Trenčín, <strong>IČO:</strong> 45 428 565
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="info-block">
+    <span class="section-title">Potvrdzovateľ:</span>
+    <p>
+      {{ data.potvrdzovatel.nazov }}<br>
+      {% if data.potvrdzovatel.svps %}
+      <strong>Registračné číslo ŠVPS:</strong> {{ data.potvrdzovatel.svps }}<br>
+      {% endif %}
+      <strong>IČO:</strong> {{ data.potvrdzovatel.ico }}<br>
+      {% if data.potvrdzovatel.tel %}
+      <strong>Tel.:</strong> {{ data.potvrdzovatel.tel }}<br>
+      {% endif %}
+      {% if data.potvrdzovatel.email %}
+      <strong>E-mail:</strong> {{ data.potvrdzovatel.email }}
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="info-block">
+    <span class="section-title">Rozhodnutie orgánu štátnej správy</span>
+    <p>
+      v zmysle zákona č.79/2015 o odpadoch v znení neskorších predpisov<br>
+      <strong>Vydal:</strong> Okresný úrad Púchov<br>
+      <strong>Číslo rozhodnutia:</strong> {{ data.cislo_rozhodnutia }}<br>
+      <strong>Registračné číslo ŠVPS:</strong> {{ data.rozhodnutie_svps }}
+    </p>
+  </div>
+
+  <div class="signature-block">
+    <p>
+        V Kvašove dňa: <span id="current-date"></span><br>
+        {{ data.podpis_spolocnost }}<br>
+        Boris Ondráško<br>
+        konateľ spoločnosti
+    </p>
+</div>
+
+<script>
+    // JavaScript na generovanie aktuálneho dátumu
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('sk-SK', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    document.getElementById('current-date').textContent = formattedDate;
+</script>
+<img src="{{ url_for('static', filename='images/' + data.razitko) }}" alt="Razítko">
+
+
+</body>
+</html>
