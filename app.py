@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 import sqlite3
 from refresh_data import refresh_data  # Importujeme funkciu refresh_data z refresh_data.py
 from flask_wtf import FlaskForm
@@ -7,9 +7,8 @@ from wtforms.validators import DataRequired
 from zipfile import ZipFile
 from datetime import datetime
 import psycopg2
-import atexit
-import shutil
-import os, re
+import os
+import re
 import random
 import string
 
@@ -179,7 +178,6 @@ def personal_page(user_id):
 
     # 3. Skontrolujeme businesses.db -> rocne_suhrny pre firmu používateľa
     #    aby sme vedeli, či sa má zobraziť tlačidlo "Zobraziť potvrdenie 2024"
-    import os
     db_path = os.path.join(os.path.dirname(__file__), 'businesses.db')
     has_data = False  # prednastavíme na False
 
@@ -201,12 +199,35 @@ def personal_page(user_id):
             if any(field is not None for field in row[2:]):
                 has_data = True
 
-    # 4. Vrátime šablónu personal_page.html so všetkými premennými
+    # 4. Skontrolujeme, či má zákazník údaje o olejoch a tukoch (20 01 25 alebo 19 08 09) v zberne_listy_2025.db
+    has_oleje_tuky = False
+    db_path_2025 = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2025.db')
+    
+    if os.path.exists(db_path_2025):
+        conn_2025 = sqlite3.connect(db_path_2025)
+        c_2025 = conn_2025.cursor()
+        
+        # Skontrolujeme, či má zákazník záznamy s olejmi a tukmi (20 01 25 alebo 19 08 09)
+        c_2025.execute("""
+            SELECT COUNT(*) 
+            FROM archive 
+            WHERE delivering = ? 
+            AND (waste_name LIKE '%20 01 25%' OR waste_name LIKE '%19 08 09%')
+        """, (firma,))
+        
+        count = c_2025.fetchone()[0]
+        if count and count > 0:
+            has_oleje_tuky = True
+        
+        conn_2025.close()
+
+    # 5. Vrátime šablónu personal_page.html so všetkými premennými
     return render_template(
         'personal_page.html',
         user_info=user_info,
         archive_records=archive_records,
-        has_data=has_data
+        has_data=has_data,
+        has_oleje_tuky=has_oleje_tuky
     )
 
 
@@ -438,9 +459,6 @@ def show_user_report_template_2024(user_id, record_id):
     môže zobraziť záznam, kde v stĺpci 'delivering'
     je firma toho istého používateľa.
     """
-    import os
-    import sqlite3
-
     # 1) Overenie session
     if 'user_id' not in session:
         return "Prístup zakázaný: Nie ste prihlásený."
@@ -810,8 +828,6 @@ def show_potvrdenie_rok_2024(user_id):
     if session['user_id'] != user_id:
         return "Prístup zakázaný: Nesprávne ID používateľa"
 
-    import sqlite3, os
-
     # 1) Z users.db vytiahni firmu (alebo name) pre tohto user_id
     users_db_path = os.path.join(os.path.dirname(__file__), 'users.db')
     conn_users = sqlite3.connect(users_db_path)
@@ -858,8 +874,8 @@ def show_potvrdenie_rok_2024(user_id):
 
 
 
-@app.route('/archiv-zbernych-dokladov/<int:user_id>')
-def archiv_zbernych_dokladov(user_id):
+@app.route('/archiv-zbernych-listov-2025/<int:user_id>')
+def archiv_zbernych_listov_2025(user_id):
     # Kontrola session
     if 'user_id' not in session:
         return "Prístup zakázaný: Používateľ nie je prihlásený"
@@ -913,6 +929,278 @@ def get_available_years():
     return years
 
 
+@app.route('/user/<int:user_id>/potvrdenie_rok_2025')
+def show_potvrdenie_rok_2025(user_id):
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+    if session['user_id'] != user_id:
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+
+    # 1) Z users.db vytiahni firmu pre tohto user_id
+    conn_users = sqlite3.connect('users.db')
+    c_users = conn_users.cursor()
+    c_users.execute("SELECT firma FROM users WHERE id = ?", (user_id,))
+    row_user = c_users.fetchone()
+    conn_users.close()
+
+    if not row_user:
+        return "Používateľ neexistuje v tabuľke 'users'."
+
+    firma = row_user[0]  # Napríklad "Obec Horovce" alebo "ABC s.r.o."
+
+    # 2) Načítanie údajov z zberne_listy_2025.db pre danú firmu
+    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2025.db')
+    
+    if not os.path.exists(db_path):
+        return f"Databáza pre rok 2025 neexistuje."
+
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    # 3) Spočítanie množstiev pre každý typ odpadu pre danú firmu
+    # 20 01 08 - biologicky rozložiteľný kuchynský a reštauračný odpad
+    c.execute("""
+        SELECT SUM(quantity) 
+        FROM archive 
+        WHERE delivering = ? 
+        AND waste_name LIKE '%20 01 08%'
+    """, (firma,))
+    rok2025_200108 = c.fetchone()[0] or 0
+
+    # 20 01 25 - použité jedlé oleje a tuky
+    c.execute("""
+        SELECT SUM(quantity) 
+        FROM archive 
+        WHERE delivering = ? 
+        AND waste_name LIKE '%20 01 25%'
+    """, (firma,))
+    rok2025_200125 = c.fetchone()[0] or 0
+
+    # 19 08 09 - zmesi tukov a olejov z odlučovačov oleja z vody obsahujúce jedlé oleje a tuky
+    c.execute("""
+        SELECT SUM(quantity) 
+        FROM archive 
+        WHERE delivering = ? 
+        AND waste_name LIKE '%19 08 09%'
+    """, (firma,))
+    rok2025_190819 = c.fetchone()[0] or 0
+
+    # 4) Zistenie, či má firma záznamy s prepravcom "Silver Mine, s.r.o." (IČO: 47 204 788)
+    c.execute("""
+        SELECT COUNT(*) 
+        FROM archive 
+        WHERE delivering = ? 
+        AND carrier LIKE '%47 204 788%'
+    """, (firma,))
+    has_silver_mine = c.fetchone()[0] > 0
+
+    conn.close()
+
+    # 5) Určenie potvrdzovateľa podľa prepravcu
+    if has_silver_mine:
+        potvrdzovatel = {
+            "nazov": "Silver Mine, s.r.o., Kvašov 43, 020 62 Kvašov",
+            "ico": "47204788",
+            "svps": "COLTR33PU-SK",
+            "tel": None,
+            "email": None
+        }
+        rozhodnutie_svps = "COLTR33PU-SK"
+        podpis_spolocnost = "Silver Mine, s.r.o."
+        razitko = "Silver.png"
+    else:
+        potvrdzovatel = {
+            "nazov": "Silver Mine PLUS s.r.o., Kvašov č.43, 020 62",
+            "ico": "55 598 439",
+            "svps": None,
+            "tel": "0908 704 423",
+            "email": "firma@silvermine.sk"
+        }
+        rozhodnutie_svps = "COLTR152PU-SK"
+        podpis_spolocnost = "Silver Mine PLUS s.r.o."
+        razitko = "plus.png"
+
+    # 6) Vytvorenie dátovej štruktúry pre šablónu
+    data = {
+        "name": firma,
+        "rok2025_200108": round(rok2025_200108, 2) if rok2025_200108 else 0,
+        "rok2025_200125": round(rok2025_200125, 2) if rok2025_200125 else 0,
+        "rok2025_190819": round(rok2025_190819, 2) if rok2025_190819 else 0,
+        "potvrdzovatel": potvrdzovatel,
+        "rozhodnutie_svps": rozhodnutie_svps,
+        "podpis_spolocnost": podpis_spolocnost,
+        "razitko": razitko
+    }
+
+    # 7) Vráť šablónu pre rok 2025
+    return render_template('potvrdenie_rok_2025.html', data=data)
+
+
+@app.route('/user/<int:user_id>/potvrdenie-kuch-odpad-2025')
+def show_potvrdenie_kuch_odpad_2025(user_id):
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+    if session['user_id'] != user_id:
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+
+    # 1) Z users.db vytiahni firmu pre tohto user_id
+    conn_users = sqlite3.connect('users.db')
+    c_users = conn_users.cursor()
+    c_users.execute("SELECT firma FROM users WHERE id = ?", (user_id,))
+    row_user = c_users.fetchone()
+    conn_users.close()
+
+    if not row_user:
+        return "Používateľ neexistuje v tabuľke 'users'."
+
+    firma = row_user[0]
+
+    # 2) Načítanie údajov z zberne_listy_2025.db pre danú firmu
+    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2025.db')
+    
+    if not os.path.exists(db_path):
+        return f"Databáza pre rok 2025 neexistuje."
+
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    # 3) Spočítanie množstva len pre 20 01 08 - biologicky rozložiteľný kuchynský a reštauračný odpad
+    c.execute("""
+        SELECT SUM(quantity) 
+        FROM archive 
+        WHERE delivering = ? 
+        AND waste_name LIKE '%20 01 08%'
+    """, (firma,))
+    rok2025_200108 = c.fetchone()[0] or 0
+
+    # 4) Zistenie, či má firma záznamy s prepravcom "Silver Mine, s.r.o." (IČO: 47 204 788)
+    c.execute("""
+        SELECT COUNT(*) 
+        FROM archive 
+        WHERE delivering = ? 
+        AND carrier LIKE '%47 204 788%'
+        AND waste_name LIKE '%20 01 08%'
+    """, (firma,))
+    has_silver_mine = c.fetchone()[0] > 0
+
+    conn.close()
+
+    # 5) Určenie potvrdzovateľa podľa prepravcu
+    if has_silver_mine:
+        potvrdzovatel = {
+            "nazov": "Silver Mine, s.r.o., Kvašov 43, 020 62 Kvašov",
+            "ico": "47204788",
+            "svps": "COLTR33PU-SK",
+            "tel": None,
+            "email": None
+        }
+        rozhodnutie_svps = "COLTR33PU-SK"
+        podpis_spolocnost = "Silver Mine, s.r.o."
+        razitko = "Silver.png"
+        cislo_rozhodnutia = "OU-PU-OSZP-2013/00219-2/ZG9-5"
+    else:
+        potvrdzovatel = {
+            "nazov": "Silver Mine PLUS s.r.o., Kvašov č.43, 020 62",
+            "ico": "55 598 439",
+            "svps": None,
+            "tel": "0908 704 423",
+            "email": "firma@silvermine.sk"
+        }
+        rozhodnutie_svps = "COLTR152PU-SK"
+        podpis_spolocnost = "Silver Mine PLUS s.r.o."
+        razitko = "plus.png"
+        cislo_rozhodnutia = "OU-PU-OSZP-2023/001461-005-ZG-9"
+
+    # 6) Vytvorenie dátovej štruktúry pre šablónu
+    data = {
+        "name": firma,
+        "rok2025_200108": round(rok2025_200108, 2) if rok2025_200108 else 0,
+        "potvrdzovatel": potvrdzovatel,
+        "rozhodnutie_svps": rozhodnutie_svps,
+        "podpis_spolocnost": podpis_spolocnost,
+        "razitko": razitko,
+        "cislo_rozhodnutia": cislo_rozhodnutia
+    }
+
+    # 7) Vráť šablónu pre kuchynský odpad 2025
+    return render_template('potvrdenie_kuch_odpad_2025.html', data=data)
+
+
+@app.route('/user/<int:user_id>/potvrdenie-oleje-tuky-2025')
+def show_potvrdenie_oleje_tuky_2025(user_id):
+    if 'user_id' not in session:
+        return "Prístup zakázaný: Používateľ nie je prihlásený"
+    if session['user_id'] != user_id:
+        return "Prístup zakázaný: Nesprávne ID používateľa"
+
+    # 1) Z users.db vytiahni firmu pre tohto user_id
+    conn_users = sqlite3.connect('users.db')
+    c_users = conn_users.cursor()
+    c_users.execute("SELECT firma FROM users WHERE id = ?", (user_id,))
+    row_user = c_users.fetchone()
+    conn_users.close()
+
+    if not row_user:
+        return "Používateľ neexistuje v tabuľke 'users'."
+
+    firma = row_user[0]
+
+    # 2) Načítanie údajov z zberne_listy_2025.db pre danú firmu
+    db_path = os.path.join(os.path.dirname(__file__), 'archivy', 'zberne_listy_2025.db')
+    
+    if not os.path.exists(db_path):
+        return f"Databáza pre rok 2025 neexistuje."
+
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    # 3) Spočítanie množstva pre 20 01 25 - použité jedlé oleje a tuky
+    c.execute("""
+        SELECT SUM(quantity) 
+        FROM archive 
+        WHERE delivering = ? 
+        AND waste_name LIKE '%20 01 25%'
+    """, (firma,))
+    rok2025_200125 = c.fetchone()[0] or 0
+
+    # 4) Spočítanie množstva pre 19 08 09 - zmesi tukov a olejov (ak má zákazník)
+    c.execute("""
+        SELECT SUM(quantity) 
+        FROM archive 
+        WHERE delivering = ? 
+        AND waste_name LIKE '%19 08 09%'
+    """, (firma,))
+    rok2025_190819 = c.fetchone()[0] or 0
+
+    conn.close()
+
+    # 5) Pre oleje a tuky je vždy Silver Mine, s.r.o.
+    potvrdzovatel = {
+        "nazov": "Silver Mine, s.r.o., Kvašov 43, 020 62 Kvašov",
+        "ico": "47204788",
+        "svps": "COLTR33PU-SK",
+        "tel": None,
+        "email": None
+    }
+    rozhodnutie_svps = "COLTR33PU-SK"
+    podpis_spolocnost = "Silver Mine, s.r.o."
+    razitko = "Silver.png"
+    cislo_rozhodnutia = "OU-PU-OSZP-2013/00219-2/ZG9-5"
+
+    # 6) Vytvorenie dátovej štruktúry pre šablónu
+    data = {
+        "name": firma,
+        "rok2025_200125": round(rok2025_200125, 2) if rok2025_200125 else 0,
+        "rok2025_190819": round(rok2025_190819, 2) if rok2025_190819 else 0,
+        "potvrdzovatel": potvrdzovatel,
+        "rozhodnutie_svps": rozhodnutie_svps,
+        "podpis_spolocnost": podpis_spolocnost,
+        "razitko": razitko,
+        "cislo_rozhodnutia": cislo_rozhodnutia
+    }
+
+    # 7) Vráť šablónu pre oleje a tuky 2025
+    return render_template('potvrdenie_oleje_tuky_2025.html', data=data)
 
 
 if __name__ == "__main__":
